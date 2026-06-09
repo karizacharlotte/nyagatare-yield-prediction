@@ -13,9 +13,9 @@ const LEAVES = [
 ]
 
 const STATS = [
-  { val: '216',  lbl: 'Field Trials', icon: '📊' },
-  { val: '0.67', lbl: 'Model R²',     icon: '🎯' },
-  { val: '2',    lbl: 'Crop Models',  icon: '🌱' },
+  { val: '216',  lblKey: 'hero_stat1_lbl', icon: '📊' },
+  { val: '0.67', lblKey: 'hero_stat2_lbl', icon: '🎯' },
+  { val: '2',    lblKey: 'hero_stat3_lbl', icon: '🌱' },
 ]
 
 export default function Hero() {
@@ -112,16 +112,16 @@ export default function Hero() {
           transition={{ delay: 0.6 }}
           className="grid grid-cols-3 gap-4 w-full max-w-lg mx-auto"
         >
-          {STATS.map(({ val, lbl, icon }, i) => (
+          {STATS.map(({ val, lblKey, icon }, i) => (
             <motion.div
-              key={lbl}
+              key={lblKey}
               whileHover={{ y: -4, scale: 1.04 }}
               transition={{ type: 'spring', stiffness: 300 }}
               className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/15 shadow-xl cursor-default"
             >
               <div className="text-2xl mb-2">{icon}</div>
               <div className="text-3xl font-extrabold text-white tracking-tight">{val}</div>
-              <div className="text-harvest-300 text-xs font-medium mt-1 leading-snug">{lbl}</div>
+              <div className="text-harvest-300 text-xs font-medium mt-1 leading-snug">{t(lblKey)}</div>
             </motion.div>
           ))}
         </motion.div>

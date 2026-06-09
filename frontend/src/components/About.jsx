@@ -5,8 +5,8 @@ const STEP_ICONS = ['📋', '🔬', '🤖', '🌐']
 const STEP_KEYS = ['step1', 'step2', 'step3', 'step4']
 
 const METRICS = [
-  { crop: 'Rice 🌾',  r2: '0.674', rmse: '0.85 t/ha', target: true  },
-  { crop: 'Beans 🫘', r2: '0.494', rmse: '0.32 t/ha', target: false },
+  { cropKey: 'metric_rice',  r2: '0.674', rmse: '0.85 t/ha', target: true  },
+  { cropKey: 'metric_beans', r2: '0.494', rmse: '0.32 t/ha', target: false },
 ]
 
 export default function About() {
@@ -49,15 +49,15 @@ export default function About() {
             <h3 className="font-bold text-harvest-800 text-lg">{t('perf_title')}</h3>
             <p className="text-gray-400 text-xs">{t('perf_subtitle')}</p>
           </div>
-          {METRICS.map(({ crop, r2, rmse, target }) => (
+          {METRICS.map(({ cropKey, r2, rmse, target }) => (
             <div
-              key={crop}
+              key={cropKey}
               className={`rounded-2xl p-5 border ${
                 target ? 'bg-harvest-50 border-harvest-200' : 'bg-gray-50 border-gray-200'
               }`}
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="font-bold text-gray-800">{crop}</span>
+                <span className="font-bold text-gray-800">{t(cropKey)}</span>
                 {target
                   ? <span className="bg-harvest-500 text-white text-xs px-2 py-0.5 rounded-full font-semibold">{t('perf_target')}</span>
                   : <span className="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full font-semibold">{t('perf_ceiling')}</span>

@@ -21,9 +21,6 @@ export default function About() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
 
         <div className="text-center mb-12">
-          <span className="inline-block bg-harvest-100 text-harvest-700 text-xs font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wide">
-            ALU Capstone 2024
-          </span>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-harvest-900 tracking-tight">
             {t('about_title')}
           </h2>

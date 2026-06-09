@@ -52,7 +52,6 @@ function FormSelect({ id, value, onChange, children }) {
 
 export default function PredictionForm() {
   const { t, lang } = useLang()
-  const sub = (rw) => lang === 'en' ? rw : null
 
   const [crop, setCrop]       = useState('bean')
   const [npk, setNpk]         = useState({ N: true, P: true, K: true })
@@ -165,21 +164,21 @@ export default function PredictionForm() {
 
               {/* NPK */}
               <div>
-                <FormLabel main={t('form_fertiliser')} sub={lang === 'en' ? t('form_npk_note') : null} />
+                <FormLabel main={t('form_fertiliser')} />
                 <NPKToggle values={npk} onChange={handleNpk} />
               </div>
 
               {/* Sector + Prev crop */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <FormLabel main={t('form_sector')} sub={sub('Umurenge')} />
+                  <FormLabel main={t('form_sector')} />
                   <FormSelect id="sector" value={sector} onChange={setSector}>
                     {sectors.map(s => <option key={s}>{s}</option>)}
                   </FormSelect>
                 </div>
                 {crop === 'bean' && (
                   <div>
-                    <FormLabel main={t('form_prev_crop')} sub={sub('Ibihingwa byabanjirije')} />
+                    <FormLabel main={t('form_prev_crop')} />
                     <FormSelect id="prev_crop" value={prevCrop} onChange={setPrevCrop}>
                       {prevCrops.map(p => <option key={p} value={p}>{prevCropLabel(p)}</option>)}
                     </FormSelect>
@@ -197,7 +196,7 @@ export default function PredictionForm() {
 
               {/* Planting month */}
               <div>
-                <FormLabel main={t('form_month')} sub={sub("Ukwezi kw'ibiba")} />
+                <FormLabel main={t('form_month')} />
                 <FormSelect id="month" value={month} onChange={setMonth}>
                   {months.map((m, i) => (
                     <option key={i} value={i+1}>{m}</option>
@@ -208,18 +207,18 @@ export default function PredictionForm() {
               {/* Growing days + Rainfall */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <FormLabel main={t('form_days')} sub={sub('Iminsi')} />
+                  <FormLabel main={t('form_days')} />
                   <FormInput id="days" value={days} onChange={setDays} min={60} max={200} />
                 </div>
                 <div>
-                  <FormLabel main={t('form_rain')} sub={sub('Imvura (mm)')} />
+                  <FormLabel main={t('form_rain')} />
                   <FormInput id="rain" value={rain} onChange={setRain} min={50} max={900} step={10} />
                 </div>
               </div>
 
               {/* Temperature */}
               <div>
-                <FormLabel main={t('form_temp')} sub={sub('Ubushyuhe (°C)')} />
+                <FormLabel main={t('form_temp')} />
                 <div className="relative">
                   <FormInput id="temp" value={temp} onChange={setTemp} min={18} max={40} step={0.1} />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">°C</span>

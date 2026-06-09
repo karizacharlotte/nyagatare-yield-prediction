@@ -19,8 +19,7 @@ export default function Header() {
         <button onClick={() => scrollTo('hero')} className="flex items-center gap-2 group">
           <span className="text-2xl">🌿</span>
           <div className="text-left leading-tight">
-            <div className="text-white font-bold text-sm tracking-wide">YieldAI</div>
-            <div className="text-harvest-400 text-xs">Nyagatare</div>
+            <div className="text-white font-bold text-sm tracking-wide">Yield Wise</div>
           </div>
         </button>
 

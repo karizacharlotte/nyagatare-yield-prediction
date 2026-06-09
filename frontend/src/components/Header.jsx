@@ -22,23 +22,18 @@ export default function Header() {
             <span className="text-lg leading-none">🌿</span>
           </div>
           {/* Brand name */}
-          <div className="flex flex-col leading-none">
-            <span
-              className="font-extrabold tracking-tight text-xl"
-              style={{
-                background: 'linear-gradient(90deg, #ffffff 0%, #86efac 60%, #4ade80 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              Yield<span style={{ WebkitTextFillColor: '#4ade80' }}>Wise</span>
-            </span>
-            <span className="text-harvest-500 text-[10px] font-semibold tracking-[0.18em] uppercase mt-0.5">
-              Nyagatare · Rwanda
-            </span>
-          </div>
+          <span
+            className="font-extrabold tracking-tight text-2xl"
+            style={{
+              background: 'linear-gradient(90deg, #ffffff 0%, #86efac 60%, #4ade80 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              letterSpacing: '-0.03em',
+            }}
+          >
+            Yield<span style={{ WebkitTextFillColor: '#4ade80' }}>Wise</span>
+          </span>
         </button>
 
         {/* Desktop nav */}

@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nyagatare Yield Prediction | Guteganya Umusaruro</title>
+  <style>
+    :root {
+      --green:  #27ae60;
+      --dkgreen:#1e8449;
+      --blue:   #2980b9;
+      --light:  #f0f9f4;
+      --gray:   #6c757d;
+      --red:    #e74c3c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #f5f5f5;
+      color: #222;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--green);
+      color: #fff;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    header h1 { font-size: 1.3rem; }
+    header p  { font-size: 0.85rem; opacity: 0.9; }
+    .lang-toggle button {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.5);
+      color: #fff;
+      padding: 5px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      margin-left: 6px;
+      transition: background 0.2s;
+    }
+    .lang-toggle button.active,
+    .lang-toggle button:hover { background: rgba(255,255,255,0.4); }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 900px;
+      margin: 28px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 620px) { .container { grid-template-columns: 1fr; } }
+
+    /* ── Cards ── */
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.09);
+      padding: 22px;
+    }
+    .card h2 {
+      font-size: 1rem;
+      color: var(--dkgreen);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--light);
+    }
+
+    /* ── Form elements ── */
+    .form-group { margin-bottom: 14px; }
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 4px;
+    }
+    label .rw { color: var(--gray); font-weight: 400; font-style: italic; }
+    select, input[type="number"], input[type="text"] {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+    }
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--green);
+    }
+
+    /* ── NPK toggles ── */
+    .npk-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .toggle-btn {
+      border: 2px solid #ccc;
+      background: #fff;
+      padding: 10px 6px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .toggle-btn.active {
+      background: var(--green);
+      border-color: var(--green);
+      color: #fff;
+    }
+    .toggle-btn span { display: block; font-size: 0.7rem; font-weight:400; color: inherit; }
+
+    /* ── Submit button ── */
+    .btn-predict {
+      width: 100%;
+      padding: 13px;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: background 0.2s;
+    }
+    .btn-predict:hover { background: var(--dkgreen); }
+    .btn-predict:disabled { background: #aaa; cursor: not-allowed; }
+
+    /* ── Result panel ── */
+    #result { display: none; }
+    .result-main {
+      text-align: center;
+      padding: 20px 0 10px;
+    }
+    .result-main .crop-icon { font-size: 2.5rem; }
+    .result-main .yield-number {
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: var(--green);
+    }
+    .result-main .unit { font-size: 1rem; color: var(--gray); }
+
+    /* ── Range bar ── */
+    .range-bar-wrap { margin: 16px 0; }
+    .range-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--gray);
+      margin-bottom: 4px;
+    }
+    .range-track {
+      height: 12px;
+      background: #e0e0e0;
+      border-radius: 6px;
+      position: relative;
+      overflow: visible;
+    }
+    .range-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #a8d8b9, var(--green));
+      border-radius: 6px;
+      position: absolute;
+    }
+    .range-pointer {
+      width: 14px;
+      height: 14px;
+      background: var(--dkgreen);
+      border: 2px solid #fff;
+      border-radius: 50%;
+      position: absolute;
+      top: -1px;
+      transform: translateX(-50%);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+
+    /* ── Metric chips ── */
+    .metrics {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .metric-chip {
+      background: var(--light);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      color: #333;
+    }
+    .metric-chip strong { color: var(--dkgreen); }
+
+    /* ── API section ── */
+    .api-box {
+      grid-column: 1 / -1;
+    }
+    .api-box h2 { color: var(--blue); border-bottom-color: #ddeeff; }
+    .endpoint {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.82rem;
+      margin-top: 10px;
+      overflow-x: auto;
+    }
+    .method { color: #a6e3a1; font-weight: 700; }
+    .url    { color: #89dceb; }
+    .cmt    { color: #6c7086; }
+    .key    { color: #cba6f7; }
+    .val    { color: #fab387; }
+
+    /* ── Loading spinner ── */
+    .spinner {
+      border: 3px solid #eee;
+      border-top-color: var(--green);
+      border-radius: 50%;
+      width: 24px; height: 24px;
+      animation: spin 0.8s linear infinite;
+      margin: 12px auto;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      color: var(--red);
+      font-size: 0.88rem;
+      margin-top: 8px;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div>
+      <h1 id="hdr-title">🌱 Nyagatare Yield Prediction</h1>
+      <p id="hdr-sub">Intelligent Simulation for Agricultural Yield Prediction</p>
+    </div>
+    <div class="lang-toggle">
+      <button onclick="setLang('en')" id="btn-en" class="active">English</button>
+      <button onclick="setLang('rw')" id="btn-rw">Kinyarwanda</button>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- ── Input card ── -->
+    <div class="card">
+      <h2 id="lbl-inputs">Farm Inputs</h2>
+      <form id="predict-form">
+
+        <div class="form-group">
+          <label id="lbl-crop">Crop <span class="rw">(Umusaruro)</span></label>
+          <select id="crop" onchange="updateCropUI()">
+            <option value="bean">Bean — Ibishyimbo</option>
+            <option value="rice">Rice — Umuceri</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label id="lbl-npk">Fertiliser applied <span class="rw">(Ifumbire)</span></label>
+          <div class="npk-grid">
+            <button type="button" class="toggle-btn active" id="btn-N" onclick="toggleNPK('N')">
+              N – Nitrogen<span>Azote</span>
+            </button>
+            <button type="button" class="toggle-btn active" id="btn-P" onclick="toggleNPK('P')">
+              P – Phosphorus<span>Fosifor</span>
+            </button>
+            <button type="button" class="toggle-btn active" id="btn-K" onclick="toggleNPK('K')">
+              K – Potassium<span>Potasiyumu</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label id="lbl-sector">Sector <span class="rw">(Umurenge)</span></label>
+          <select id="sector">
+            <option value="Katabagemu">Katabagemu</option>
+            <option value="Rukomo">Rukomo</option>
+            <option value="Nyagatare">Nyagatare</option>
+            <option value="Rwempasha">Rwempasha</option>
+            <option value="Tabagwe">Tabagwe</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="prev-crop-group">
+          <label id="lbl-prev">Previous crop <span class="rw">(Ibihingwa byabanjirije)</span></label>
+          <select id="prev_crop">
+            <option value="Maize">Maize — Ibigori</option>
+            <option value="Sorghum">Sorghum — Amabigiri</option>
+            <option value="Sweet potato">Sweet potato — Ibijumba</option>
+            <option value="Rice">Rice — Umuceri</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label id="lbl-month">Planting month <span class="rw">(Ukwezi kw'ibiba)</span></label>
+          <select id="planting_month">
+            <option value="2">February — Gashyantare</option>
+            <option value="7">July — Nyakanga</option>
+            <option value="8">August — Kanama</option>
+            <option value="9" selected>September — Nzeli</option>
+            <option value="10">October — Ukwakira</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label id="lbl-days">Growing days <span class="rw">(Iminsi yo gukura)</span></label>
+          <input type="number" id="growing_days" value="97" min="60" max="180" />
+        </div>
+
+        <div class="form-group">
+          <label id="lbl-rain">Total rainfall (mm) <span class="rw">(Imvura yose, mm)</span></label>
+          <input type="number" id="total_rainfall_mm" value="250" min="50" max="800" step="10" />
+        </div>
+
+        <div class="form-group">
+          <label id="lbl-temp">Mean temperature (°C) <span class="rw">(Ubushyuhe buringanye)</span></label>
+          <input type="number" id="mean_temp_C" value="27.5" min="18" max="35" step="0.5" />
+        </div>
+
+        <button type="submit" class="btn-predict" id="btn-predict">
+          🌾 <span id="btn-text">Predict Yield</span>
+        </button>
+        <div class="spinner" id="spinner"></div>
+        <div class="error-msg" id="error-msg"></div>
+      </form>
+    </div>
+
+    <!-- ── Result card ── -->
+    <div class="card">
+      <h2 id="lbl-result">Prediction Result</h2>
+
+      <div id="placeholder" style="text-align:center; padding:40px 0; color:#aaa;">
+        <div style="font-size:3rem">🌱</div>
+        <p id="lbl-fill">Fill in the form and click Predict</p>
+        <p id="lbl-fill-rw" style="font-style:italic; font-size:0.85rem">Uzuza ifishi hanyuma ukande Predict</p>
+      </div>
+
+      <div id="result">
+        <div class="result-main">
+          <div class="crop-icon" id="res-icon">🫘</div>
+          <div class="yield-number" id="res-yield">–</div>
+          <div class="unit" id="lbl-unit">t/ha (tonnes per hectare)</div>
+        </div>
+
+        <div class="range-bar-wrap">
+          <div class="range-label">
+            <span id="res-low">–</span>
+            <span id="lbl-range">Likely range</span>
+            <span id="res-high">–</span>
+          </div>
+          <div class="range-track" id="range-track">
+            <div class="range-fill" id="range-fill"></div>
+            <div class="range-pointer" id="range-pointer"></div>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <div class="metric-chip">Model R² <strong id="res-r2">–</strong></div>
+          <div class="metric-chip">RMSE <strong id="res-rmse">–</strong> t/ha</div>
+          <div class="metric-chip" id="conf-chip">Confidence <strong id="res-conf">–</strong></div>
+        </div>
+
+        <p style="margin-top:14px; font-size:0.8rem; color:var(--gray)" id="lbl-note">
+          Range = prediction ± model RMSE. Results are based on RAB field trial data from Nyagatare District.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── API Reference card ── -->
+    <div class="card api-box">
+      <h2>🔌 API Reference — Postman / Swagger</h2>
+      <p style="font-size:0.85rem; color:#555; margin-bottom:8px">
+        Send a <strong>POST</strong> request to <code>/predict</code> with a JSON body:
+      </p>
+      <div class="endpoint">
+<span class="method">POST</span> <span class="url">http://localhost:5000/predict</span>
+<span class="cmt">// Content-Type: application/json</span>
+
+{
+  <span class="key">"crop"</span>:              <span class="val">"bean"</span>,   <span class="cmt">// or "rice"</span>
+  <span class="key">"has_N"</span>:             <span class="val">1</span>,       <span class="cmt">// 0 or 1</span>
+  <span class="key">"has_P"</span>:             <span class="val">1</span>,
+  <span class="key">"has_K"</span>:             <span class="val">1</span>,
+  <span class="key">"N_boost"</span>:           <span class="val">0</span>,       <span class="cmt">// 0=none 1=low 2=medium 3=high</span>
+  <span class="key">"P_boost"</span>:           <span class="val">0</span>,
+  <span class="key">"K_boost"</span>:           <span class="val">0</span>,
+  <span class="key">"sector"</span>:            <span class="val">"Katabagemu"</span>,
+  <span class="key">"prev_crop"</span>:         <span class="val">"Maize"</span>,
+  <span class="key">"planting_month"</span>:    <span class="val">9</span>,
+  <span class="key">"growing_days"</span>:      <span class="val">97</span>,
+  <span class="key">"total_rainfall_mm"</span>: <span class="val">250.0</span>,
+  <span class="key">"mean_temp_C"</span>:       <span class="val">27.5</span>
+}
+
+<span class="cmt">// Response:</span>
+{
+  <span class="key">"crop"</span>:                  <span class="val">"bean"</span>,
+  <span class="key">"predicted_yield_t_ha"</span>:  <span class="val">2.62</span>,
+  <span class="key">"low_estimate_t_ha"</span>:     <span class="val">2.30</span>,
+  <span class="key">"high_estimate_t_ha"</span>:    <span class="val">2.94</span>,
+  <span class="key">"model_r2"</span>:              <span class="val">0.494</span>,
+  <span class="key">"model_rmse"</span>:            <span class="val">0.316</span>
+}
+      </div>
+      <p style="margin-top:10px; font-size:0.8rem; color:#888">
+        Other endpoints: <code>GET /health</code> · <code>GET /model-info</code>
+      </p>
+    </div>
+
+  </div><!-- /container -->
+
+  <script>
+    // ── Language strings ──────────────────────────────────────────────────────
+    const STRINGS = {
+      en: {
+        'hdr-title':   '🌱 Nyagatare Yield Prediction',
+        'hdr-sub':     'Intelligent Simulation for Agricultural Yield Prediction',
+        'lbl-inputs':  'Farm Inputs',
+        'lbl-result':  'Prediction Result',
+        'lbl-crop':    'Crop',
+        'lbl-npk':     'Fertiliser applied',
+        'lbl-sector':  'Sector',
+        'lbl-prev':    'Previous crop',
+        'lbl-month':   'Planting month',
+        'lbl-days':    'Growing days',
+        'lbl-rain':    'Total rainfall (mm)',
+        'lbl-temp':    'Mean temperature (°C)',
+        'btn-text':    'Predict Yield',
+        'lbl-unit':    't/ha (tonnes per hectare)',
+        'lbl-range':   'Likely range',
+        'lbl-note':    'Range = prediction ± model RMSE. Results are based on RAB field trial data from Nyagatare District.',
+        'lbl-fill':    'Fill in the form and click Predict',
+      },
+      rw: {
+        'hdr-title':   '🌱 Guteganya Umusaruro — Nyagatare',
+        'hdr-sub':     'Sisitemu Ngereranye yo Guteganya Umusaruro',
+        'lbl-inputs':  'Amakuru y\'Ubutaka',
+        'lbl-result':  'Igisubizo',
+        'lbl-crop':    'Umusaruro',
+        'lbl-npk':     'Ifumbire yakoreshejwe',
+        'lbl-sector':  'Umurenge',
+        'lbl-prev':    'Ibihingwa byabanjirije',
+        'lbl-month':   'Ukwezi kw\'ibiba',
+        'lbl-days':    'Iminsi yo gukura',
+        'lbl-rain':    'Imvura yose (mm)',
+        'lbl-temp':    'Ubushyuhe buringanye (°C)',
+        'btn-text':    'Teganya Umusaruro',
+        'lbl-unit':    't/ha (toni ku hektari)',
+        'lbl-range':   'Intera y\'ibisubizo',
+        'lbl-note':    'Intera = igisubizo ± RMSE ya modeli. Ibisubizo bishingiye ku makuru ya RAB avuye muri Nyagatare.',
+        'lbl-fill':    'Uzuza ifishi hanyuma ukande Teganya',
+      },
+    };
+
+    let lang = 'en';
+
+    function setLang(l) {
+      lang = l;
+      document.getElementById('btn-en').classList.toggle('active', l === 'en');
+      document.getElementById('btn-rw').classList.toggle('active', l === 'rw');
+      const S = STRINGS[l];
+      for (const [id, text] of Object.entries(S)) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+      }
+    }
+
+    // ── NPK toggles ───────────────────────────────────────────────────────────
+    const npkState = { N: 1, P: 1, K: 1 };
+
+    function toggleNPK(letter) {
+      npkState[letter] = npkState[letter] ? 0 : 1;
+      document.getElementById(`btn-${letter}`).classList.toggle('active', !!npkState[letter]);
+    }
+
+    // ── Crop UI update ────────────────────────────────────────────────────────
+    function updateCropUI() {
+      const crop = document.getElementById('crop').value;
+      document.getElementById('prev-crop-group').style.display =
+        crop === 'bean' ? 'block' : 'none';
+    }
+    updateCropUI();
+
+    // ── Submit ────────────────────────────────────────────────────────────────
+    document.getElementById('predict-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn     = document.getElementById('btn-predict');
+      const spinner = document.getElementById('spinner');
+      const errDiv  = document.getElementById('error-msg');
+      btn.disabled  = true;
+      spinner.style.display = 'block';
+      errDiv.style.display  = 'none';
+
+      const payload = {
+        crop:             document.getElementById('crop').value,
+        has_N:            npkState.N,
+        has_P:            npkState.P,
+        has_K:            npkState.K,
+        N_boost:          0,
+        P_boost:          0,
+        K_boost:          0,
+        sector:           document.getElementById('sector').value,
+        prev_crop:        document.getElementById('prev_crop').value,
+        planting_month:   parseInt(document.getElementById('planting_month').value),
+        growing_days:     parseInt(document.getElementById('growing_days').value),
+        total_rainfall_mm: parseFloat(document.getElementById('total_rainfall_mm').value),
+        mean_temp_C:      parseFloat(document.getElementById('mean_temp_C').value),
+      };
+
+      try {
+        const res  = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Request failed');
+        showResult(data);
+      } catch (err) {
+        errDiv.textContent = '⚠ ' + err.message;
+        errDiv.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+      }
+    });
+
+    function showResult(data) {
+      document.getElementById('placeholder').style.display = 'none';
+      document.getElementById('result').style.display = 'block';
+
+      const icon = data.crop === 'bean' ? '🫘' : '🌾';
+      document.getElementById('res-icon').textContent  = icon;
+      document.getElementById('res-yield').textContent = data.predicted_yield_t_ha.toFixed(2);
+      document.getElementById('res-low').textContent   = data.low_estimate_t_ha.toFixed(2) + ' t/ha';
+      document.getElementById('res-high').textContent  = data.high_estimate_t_ha.toFixed(2) + ' t/ha';
+      document.getElementById('res-r2').textContent    = data.model_r2;
+      document.getElementById('res-rmse').textContent  = data.model_rmse;
+
+      // Confidence label
+      const r2 = data.model_r2;
+      const conf = r2 >= 0.65 ? 'Good' : r2 >= 0.50 ? 'Moderate' : 'Low';
+      document.getElementById('res-conf').textContent = conf;
+
+      // Range bar: map [low, high] onto track width
+      const lo = data.low_estimate_t_ha;
+      const hi = data.high_estimate_t_ha;
+      const pred = data.predicted_yield_t_ha;
+      const pct = (pred - lo) / (hi - lo) * 100;
+      document.getElementById('range-fill').style.width  = '100%';
+      document.getElementById('range-pointer').style.left = pct + '%';
+    }
+  </script>
+</body>
+</html>

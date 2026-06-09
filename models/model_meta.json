@@ -1,0 +1,45 @@
+{
+  "bean": {
+    "model_type": "RF",
+    "cv_r2": 0.494,
+    "cv_rmse": 0.316,
+    "cv_mae": 0.262,
+    "features": [
+      "has_N",
+      "has_P",
+      "has_K",
+      "N_boost",
+      "P_boost",
+      "K_boost",
+      "prev_crop_encoded",
+      "sector_encoded",
+      "planting_month",
+      "growing_days",
+      "total_rainfall_mm",
+      "mean_temp_C"
+    ],
+    "target": "yield_t_ha",
+    "n_train": 96
+  },
+  "rice": {
+    "model_type": "GB",
+    "cv_r2": 0.674,
+    "cv_rmse": 0.848,
+    "cv_mae": 0.629,
+    "features": [
+      "has_N",
+      "has_P",
+      "has_K",
+      "N_boost",
+      "P_boost",
+      "K_boost",
+      "sector_encoded",
+      "planting_month",
+      "growing_days",
+      "total_rainfall_mm",
+      "mean_temp_C"
+    ],
+    "target": "yield_t_ha",
+    "n_train": 120
+  }
+}

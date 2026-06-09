@@ -1,15 +1,17 @@
 import { motion } from 'framer-motion'
+import { useLang } from '../context/LangContext'
 
 const NUTRIENTS = [
-  { key: 'N', label: 'N', full: 'Nitrogen',    color: 'bg-blue-500',   ring: 'ring-blue-400'   },
-  { key: 'P', label: 'P', full: 'Phosphorus',  color: 'bg-orange-500', ring: 'ring-orange-400' },
-  { key: 'K', label: 'K', full: 'Potassium',   color: 'bg-purple-500', ring: 'ring-purple-400' },
+  { key: 'N', label: 'N', tKey: 'nutrient_n', color: 'bg-blue-500',   ring: 'ring-blue-400'   },
+  { key: 'P', label: 'P', tKey: 'nutrient_p', color: 'bg-orange-500', ring: 'ring-orange-400' },
+  { key: 'K', label: 'K', tKey: 'nutrient_k', color: 'bg-purple-500', ring: 'ring-purple-400' },
 ]
 
 export default function NPKToggle({ values, onChange }) {
+  const { t } = useLang()
   return (
     <div className="grid grid-cols-3 gap-3">
-      {NUTRIENTS.map(({ key, label, full, color, ring }) => {
+      {NUTRIENTS.map(({ key, label, tKey, color, ring }) => {
         const active = values[key]
         return (
           <motion.button
@@ -37,7 +39,7 @@ export default function NPKToggle({ values, onChange }) {
             <span className={`inline-flex w-8 h-8 rounded-full items-center justify-center text-white font-bold text-sm mb-1 ${color}`}>
               {label}
             </span>
-            <div className="text-xs font-semibold text-gray-700">{full}</div>
+            <div className="text-xs font-semibold text-gray-700">{t(tKey)}</div>
           </motion.button>
         )
       })}

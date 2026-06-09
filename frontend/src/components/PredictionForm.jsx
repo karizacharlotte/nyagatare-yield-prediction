@@ -120,6 +120,10 @@ export default function PredictionForm() {
   const months = t('months')
   const sectors = crop === 'bean' ? BEAN_SECTORS : RICE_SECTORS
   const prevCrops = crop === 'bean' ? PREV_CROPS_BEAN : PREV_CROPS_RICE
+  const prevCropLabel = (val) => ({
+    'Maize': t('crop_maize'), 'Sorghum': t('crop_sorghum'),
+    'Sweet potato': t('crop_sweet_potato'), 'Rice': t('crop_rice_prev'),
+  }[val] ?? val)
 
   return (
     <section id="predict" className="py-16 sm:py-20 bg-harvest-50">
@@ -129,9 +133,7 @@ export default function PredictionForm() {
           <h2 className="text-3xl sm:text-4xl font-extrabold text-harvest-900 tracking-tight">
             {t('form_title')}
           </h2>
-          <p className="mt-2 text-gray-500 text-sm">
-            Enter your farm details to get an AI-powered yield estimate
-          </p>
+          <p className="mt-2 text-gray-500 text-sm">{t('form_subtitle')}</p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 items-start">
@@ -178,7 +180,7 @@ export default function PredictionForm() {
                   <div>
                     <FormLabel main={t('form_prev_crop')} sub="Ibihingwa byabanjirije" />
                     <FormSelect id="prev_crop" value={prevCrop} onChange={setPrevCrop}>
-                      {prevCrops.map(p => <option key={p}>{p}</option>)}
+                      {prevCrops.map(p => <option key={p} value={p}>{prevCropLabel(p)}</option>)}
                     </FormSelect>
                   </div>
                 )}
@@ -186,7 +188,7 @@ export default function PredictionForm() {
                   <div>
                     <FormLabel main={t('form_prev_crop')} />
                     <FormSelect id="prev_crop" value={prevCrop} onChange={setPrevCrop}>
-                      {prevCrops.map(p => <option key={p}>{p}</option>)}
+                      {prevCrops.map(p => <option key={p} value={p}>{prevCropLabel(p)}</option>)}
                     </FormSelect>
                   </div>
                 )}
@@ -284,17 +286,17 @@ export default function PredictionForm() {
                   >
                     🌱
                   </motion.div>
-                  <h3 className="text-harvest-800 font-bold text-lg mb-2">Ready to Predict</h3>
+                  <h3 className="text-harvest-800 font-bold text-lg mb-2">{t('ready_title')}</h3>
                   <p className="text-gray-400 text-sm">
-                    Fill in your farm details and click<br/>
-                    <span className="text-harvest-600 font-semibold">Predict Yield</span> to see your results
+                    {t('ready_body')}<br/>
+                    <span className="text-harvest-600 font-semibold">{t('ready_cta_link')}</span> {t('ready_body2')}
                   </p>
 
                   {/* Feature chips */}
                   <div className="mt-6 flex flex-wrap justify-center gap-2">
-                    {['NPK Treatment','Season Climate','Soil Type','Location'].map(f => (
-                      <span key={f} className="bg-harvest-50 text-harvest-700 text-xs px-3 py-1.5 rounded-full border border-harvest-200">
-                        ✓ {f}
+                    {['chip_npk','chip_climate','chip_soil','chip_location'].map(key => (
+                      <span key={key} className="bg-harvest-50 text-harvest-700 text-xs px-3 py-1.5 rounded-full border border-harvest-200">
+                        ✓ {t(key)}
                       </span>
                     ))}
                   </div>

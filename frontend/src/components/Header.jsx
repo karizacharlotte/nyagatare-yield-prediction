@@ -16,10 +16,28 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
         {/* Logo */}
-        <button onClick={() => scrollTo('hero')} className="flex items-center gap-2 group">
-          <span className="text-2xl">🌿</span>
-          <div className="text-left leading-tight">
-            <div className="text-white font-bold text-sm tracking-wide">Yield Wise</div>
+        <button onClick={() => scrollTo('hero')} className="flex items-center gap-3 group">
+          {/* Leaf icon badge */}
+          <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-harvest-600 shadow-lg shadow-harvest-900/50 group-hover:bg-harvest-500 transition-colors">
+            <span className="text-lg leading-none">🌿</span>
+          </div>
+          {/* Brand name */}
+          <div className="flex flex-col leading-none">
+            <span
+              className="font-extrabold tracking-tight text-xl"
+              style={{
+                background: 'linear-gradient(90deg, #ffffff 0%, #86efac 60%, #4ade80 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Yield<span style={{ WebkitTextFillColor: '#4ade80' }}>Wise</span>
+            </span>
+            <span className="text-harvest-500 text-[10px] font-semibold tracking-[0.18em] uppercase mt-0.5">
+              Nyagatare · Rwanda
+            </span>
           </div>
         </button>
 

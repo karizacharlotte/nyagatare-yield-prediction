@@ -69,7 +69,7 @@ export default function Hero() {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
           }}>
-            Green &amp; Smart
+            {t('hero_green_smart')}
           </span>
         </motion.h1>
 

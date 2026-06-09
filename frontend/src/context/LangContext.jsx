@@ -55,7 +55,7 @@ const STRINGS = {
     perf_r2: 'R² score',
     perf_rmse: 'RMSE',
     stack_label: 'Tech Stack',
-    footer_copy: '© 2024 Charlotte Kariza · ALU BSc Software Engineering Capstone',
+    footer_copy: '© 2026 Charlotte Kariza',
     months: ['January','February','March','April','May','June','July','August','September','October','November','December'],
   },
   rw: {
@@ -112,7 +112,7 @@ const STRINGS = {
     perf_r2: 'Amanota R²',
     perf_rmse: 'RMSE',
     stack_label: 'Ikoranabuhanga Ryakoreshejwe',
-    footer_copy: '© 2024 Charlotte Kariza · ALU BSc Software Engineering — Umushinga wa Capstone',
+    footer_copy: '© 2026 Charlotte Kariza',
     months: ['Mutarama','Gashyantare','Werurwe','Mata','Gicurasi','Kamena','Nyakanga','Kanama','Nzeli','Ukwakira','Ugushyingo','Ukuboza'],
   },
 }

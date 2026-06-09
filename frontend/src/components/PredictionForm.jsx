@@ -165,7 +165,7 @@ export default function PredictionForm() {
 
               {/* NPK */}
               <div>
-                <FormLabel main={t('form_fertiliser')} sub={t('form_npk_note')} />
+                <FormLabel main={t('form_fertiliser')} sub={lang === 'en' ? t('form_npk_note') : null} />
                 <NPKToggle values={npk} onChange={handleNpk} />
               </div>
 

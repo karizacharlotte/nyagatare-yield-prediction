@@ -27,17 +27,6 @@ export default function Hero() {
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-24 sm:py-32 text-center">
 
-        {/* Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 bg-harvest-800/60 border border-harvest-600/50 rounded-full px-4 py-1.5 mb-6"
-        >
-          <span className="w-2 h-2 rounded-full bg-harvest-400 pulse-green inline-block" />
-          <span className="text-harvest-200 text-xs font-semibold tracking-widest uppercase">
-            ALU Capstone · Nyagatare District · Rwanda
-          </span>
-        </motion.div>
 
         {/* Headline */}
         <motion.h1

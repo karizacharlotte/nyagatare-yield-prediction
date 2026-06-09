@@ -138,7 +138,7 @@ const STRINGS = {
     step2_title: 'Gutunganya Imibare',
     step2_desc: 'Amakuru y\'ikirere avuye muri Meteo Rwanda ashyirwa hamwe n\'ibihe by\'ihinga. Ifumbire NPK yandikwa nk\'uburyo bwo gukoresha.',
     step3_title: 'Modeli za ML',
-    step3_desc: 'Random Forest na Gradient Boosting zigijwe hamwe na 5-fold cross-validation. Grid search ikoreshwa kugirango imikorere ibe myiza.',
+    step3_desc: 'Random Forest na Gradient Boosting zigijwe hamwe n\'isuzuma ry\'indangagaciro mu nzira 5. Gushakisha imbogamizi nziza bikoreshwa kugirango imikorere ibe myiza.',
     step4_title: 'Porogaramu ya Interineti',
     step4_desc: 'Flask REST API itanga imibare y\'iteganyabikorwa. React frontend ifite ururimi rw\'Icyongereza na Kinyarwanda kugirango ikoreshwe neza.',
     metric_rice: 'Umuceri 🌾',

@@ -15,9 +15,9 @@ const DEFAULT_TEMP    = { bean: 28.1, rice: 28.1 }
 
 function FormLabel({ main, sub }) {
   return (
-    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+    <label className="block text-sm font-semibold text-gray-700 dark:text-harvest-100 mb-1.5">
       {main}
-      {sub && <span className="ml-1.5 text-gray-400 font-normal italic text-xs">{sub}</span>}
+      {sub && <span className="ml-1.5 text-gray-400 dark:text-harvest-400/70 font-normal italic text-xs">{sub}</span>}
     </label>
   )
 }
@@ -32,7 +32,7 @@ function FormInput({ id, type = 'number', value, onChange, min, max, step = 1, c
       min={min}
       max={max}
       step={step}
-      className={`w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-harvest-400 focus:border-harvest-400 transition-all bg-white ${className}`}
+      className={`w-full px-4 py-2.5 border border-gray-200 dark:border-harvest-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-harvest-400 focus:border-harvest-400 transition-all bg-white dark:bg-harvest-900 dark:text-harvest-50 ${className}`}
     />
   )
 }
@@ -43,7 +43,7 @@ function FormSelect({ id, value, onChange, children }) {
       id={id}
       value={value}
       onChange={e => onChange(e.target.value)}
-      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-harvest-400 focus:border-harvest-400 transition-all appearance-none cursor-pointer"
+      className="w-full px-4 py-2.5 border border-gray-200 dark:border-harvest-700 rounded-xl text-sm bg-white dark:bg-harvest-900 dark:text-harvest-50 focus:outline-none focus:ring-2 focus:ring-harvest-400 focus:border-harvest-400 transition-all appearance-none cursor-pointer"
     >
       {children}
     </select>
@@ -126,23 +126,23 @@ export default function PredictionForm() {
   }[val] ?? val)
 
   return (
-    <section id="predict" className="py-16 sm:py-20 bg-harvest-50">
+    <section id="predict" className="py-16 sm:py-20 bg-harvest-50 dark:bg-harvest-950/40 transition-colors">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
 
         <div className="text-center mb-10">
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-harvest-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-harvest-900 dark:text-harvest-50 tracking-tight">
             {t('form_title')}
           </h2>
-          <p className="mt-2 text-gray-500 text-sm">{t('form_subtitle')}</p>
+          <p className="mt-2 text-gray-500 dark:text-harvest-300/80 text-sm">{t('form_subtitle')}</p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 items-start">
 
           {/* ── FORM CARD ── */}
-          <div className="bg-white rounded-3xl shadow-lg border border-harvest-100 overflow-hidden">
+          <div className="bg-white dark:bg-harvest-900/40 rounded-3xl shadow-lg border border-harvest-100 dark:border-harvest-800 overflow-hidden transition-colors">
 
             {/* Crop selector tabs */}
-            <div className="flex bg-harvest-50 border-b border-harvest-100">
+            <div className="flex bg-harvest-50 dark:bg-harvest-950/60 border-b border-harvest-100 dark:border-harvest-800">
               {['bean','rice'].map(c => (
                 <button
                   key={c}
@@ -150,8 +150,8 @@ export default function PredictionForm() {
                   onClick={() => handleCropChange(c)}
                   className={`flex-1 py-4 flex flex-col items-center gap-1 text-sm font-semibold transition-all ${
                     crop === c
-                      ? 'bg-white text-harvest-700 border-b-2 border-harvest-500 shadow-sm'
-                      : 'text-gray-400 hover:text-harvest-600'
+                      ? 'bg-white dark:bg-harvest-900 text-harvest-700 dark:text-harvest-200 border-b-2 border-harvest-500 shadow-sm'
+                      : 'text-gray-400 dark:text-harvest-500 hover:text-harvest-600 dark:hover:text-harvest-300'
                   }`}
                 >
                   <span className="text-2xl">{c === 'bean' ? '🫘' : '🌾'}</span>
@@ -221,7 +221,7 @@ export default function PredictionForm() {
                 <FormLabel main={t('form_temp')} />
                 <div className="relative">
                   <FormInput id="temp" value={temp} onChange={setTemp} min={18} max={40} step={0.1} />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">°C</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-harvest-400/70 text-sm">°C</span>
                 </div>
               </div>
 
@@ -232,7 +232,7 @@ export default function PredictionForm() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm"
+                    className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 rounded-xl px-4 py-3 text-red-700 dark:text-red-300 text-sm"
                   >
                     ⚠ {error}
                   </motion.div>
@@ -277,7 +277,7 @@ export default function PredictionForm() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="bg-white rounded-3xl border border-harvest-100 shadow-lg p-12 text-center"
+                  className="bg-white dark:bg-harvest-900/40 rounded-3xl border border-harvest-100 dark:border-harvest-800 shadow-lg p-12 text-center transition-colors"
                 >
                   <motion.div
                     animate={{ y: [0, -10, 0] }}
@@ -286,16 +286,16 @@ export default function PredictionForm() {
                   >
                     🌱
                   </motion.div>
-                  <h3 className="text-harvest-800 font-bold text-lg mb-2">{t('ready_title')}</h3>
-                  <p className="text-gray-400 text-sm">
+                  <h3 className="text-harvest-800 dark:text-harvest-100 font-bold text-lg mb-2">{t('ready_title')}</h3>
+                  <p className="text-gray-400 dark:text-harvest-400/80 text-sm">
                     {t('ready_body')}<br/>
-                    <span className="text-harvest-600 font-semibold">{t('ready_cta_link')}</span> {t('ready_body2')}
+                    <span className="text-harvest-600 dark:text-harvest-300 font-semibold">{t('ready_cta_link')}</span> {t('ready_body2')}
                   </p>
 
                   {/* Feature chips */}
                   <div className="mt-6 flex flex-wrap justify-center gap-2">
                     {['chip_npk','chip_climate','chip_soil','chip_location'].map(key => (
-                      <span key={key} className="bg-harvest-50 text-harvest-700 text-xs px-3 py-1.5 rounded-full border border-harvest-200">
+                      <span key={key} className="bg-harvest-50 dark:bg-harvest-900 text-harvest-700 dark:text-harvest-200 text-xs px-3 py-1.5 rounded-full border border-harvest-200 dark:border-harvest-700">
                         ✓ {t(key)}
                       </span>
                     ))}

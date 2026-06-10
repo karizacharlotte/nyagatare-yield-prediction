@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { useLang } from '../context/LangContext'
+import { useTheme } from '../context/ThemeContext'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Sun, Moon, Menu, X } from 'lucide-react'
 
 export default function Header() {
   const { lang, setLang, t } = useLang()
+  const { theme, toggleTheme } = useTheme()
   const [menuOpen, setMenuOpen] = useState(false)
 
   const scrollTo = (id) => {
@@ -68,17 +71,32 @@ export default function Header() {
             ))}
           </div>
 
+          {/* Dark mode toggle */}
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle dark mode"
+            className="relative w-9 h-9 flex items-center justify-center rounded-full bg-harvest-900 border border-harvest-700 text-harvest-300 hover:text-white hover:border-harvest-500 transition-colors overflow-hidden"
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={theme}
+                initial={{ y: -16, opacity: 0, rotate: -90 }}
+                animate={{ y: 0, opacity: 1, rotate: 0 }}
+                exit={{ y: 16, opacity: 0, rotate: 90 }}
+                transition={{ duration: 0.25 }}
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                {theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
+              </motion.span>
+            </AnimatePresence>
+          </button>
+
           {/* Mobile hamburger */}
           <button
             className="md:hidden text-harvest-300 hover:text-white p-1"
             onClick={() => setMenuOpen(v => !v)}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {menuOpen
-                ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-                : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
-              }
-            </svg>
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>

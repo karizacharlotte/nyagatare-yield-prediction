@@ -42,7 +42,7 @@ export default function About() {
             >
               <div
                 className="h-24 bg-cover bg-center"
-                style={{ backgroundImage: `url(${STEP_IMAGES[i]})` }}
+                style={{ backgroundImage: `url("${STEP_IMAGES[i]}")` }}
               />
               <div className="p-5">
                 <h3 className="font-bold text-harvest-900 dark:text-zinc-100 text-sm mb-1">{t(`${key}_title`)}</h3>

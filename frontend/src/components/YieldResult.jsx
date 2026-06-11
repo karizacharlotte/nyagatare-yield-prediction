@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion'
 import { useLang } from '../context/LangContext'
+import beansImg from '../assets/crops/beans.jpg'
+import riceImg from '../assets/crops/rice.jpg'
 
 // Rwanda national averages (t/ha) for comparison
 const NATIONAL_AVG = { bean: 1.2, rice: 5.0 }
@@ -90,7 +92,7 @@ export default function YieldResult({ data, crop }) {
                   : pred >= avg * 0.85 ? t('result_avg')
                   : t('result_low')
 
-  const cropIcon = crop === 'bean' ? '🫘' : '🌾'
+  const cropImg = crop === 'bean' ? beansImg : riceImg
 
   return (
     <motion.div
@@ -104,7 +106,17 @@ export default function YieldResult({ data, crop }) {
           <p className="text-harvest-100 text-xs font-semibold uppercase tracking-widest">{t('result_title')}</p>
           <p className="text-white text-sm capitalize">{crop === 'bean' ? t('result_subtitle_bean') : t('result_subtitle_rice')}</p>
         </div>
-        <span className="text-4xl">{cropIcon}</span>
+        <motion.img
+          src={cropImg}
+          alt=""
+          className="w-12 h-12 rounded-full object-cover ring-2 ring-white/70 shadow-md"
+          initial={{ opacity: 0, scale: 0.5, rotate: -15 }}
+          animate={{ opacity: 1, scale: 1, rotate: 0, y: [0, -5, 0] }}
+          transition={{
+            default: { type: 'spring', stiffness: 200, delay: 0.3 },
+            y: { duration: 2.4, repeat: Infinity, ease: 'easeInOut', delay: 0.6 },
+          }}
+        />
       </div>
 
       <div className="p-6 space-y-5">

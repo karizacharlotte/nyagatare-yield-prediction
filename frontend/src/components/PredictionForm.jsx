@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useLang } from '../context/LangContext'
 import NPKToggle from './NPKToggle'
 import YieldResult from './YieldResult'
+import beansImg from '../assets/crops/beans.jpg'
+import riceImg from '../assets/crops/rice.jpg'
 
 const BEAN_SECTORS   = ['Katabagemu','Rukomo']
 const RICE_SECTORS   = ['Nyagatare','Rukomo','Rwempasha','Tabagwe']
@@ -154,7 +156,13 @@ export default function PredictionForm() {
                       : 'text-gray-400 dark:text-zinc-500 hover:text-harvest-600 dark:hover:text-harvest-300'
                   }`}
                 >
-                  <span className="text-2xl">{c === 'bean' ? '🫘' : '🌾'}</span>
+                  <motion.img
+                    src={c === 'bean' ? beansImg : riceImg}
+                    alt=""
+                    className="w-8 h-8 rounded-full object-cover ring-2 ring-white dark:ring-zinc-800 shadow"
+                    animate={{ y: [0, -4, 0], rotate: [0, -6, 6, 0] }}
+                    transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut', delay: c === 'bean' ? 0 : 0.4 }}
+                  />
                   {c === 'bean' ? t('form_crop_bean') : t('form_crop_rice')}
                 </button>
               ))}

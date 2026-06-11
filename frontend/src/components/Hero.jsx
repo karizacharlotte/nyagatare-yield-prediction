@@ -1,5 +1,43 @@
-import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useLang } from '../context/LangContext'
+import farm1 from '../assets/hero/farm1.jpg'
+import farm2 from '../assets/hero/farm2.jpg'
+import farm3 from '../assets/hero/farm3.jpg'
+
+const HERO_PHOTOS = [farm1, farm2, farm3]
+const SLIDE_SECONDS = 7
+
+function HeroPhotos() {
+  const [active, setActive] = useState(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setActive(i => (i + 1) % HERO_PHOTOS.length)
+    }, SLIDE_SECONDS * 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      <AnimatePresence>
+        <motion.img
+          key={active}
+          src={HERO_PHOTOS[active]}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          initial={{ opacity: 0, scale: 1 }}
+          animate={{ opacity: 1, scale: 1.12 }}
+          exit={{ opacity: 0 }}
+          transition={{
+            opacity: { duration: 1.5, ease: 'easeInOut' },
+            scale: { duration: SLIDE_SECONDS + 1.5, ease: 'linear' },
+          }}
+        />
+      </AnimatePresence>
+    </div>
+  )
+}
 
 const LEAVES = [
   { e: '🌿', x: 6,  y: 12, dur: 5.2 },
@@ -24,7 +62,13 @@ export default function Hero() {
     document.getElementById('predict')?.scrollIntoView({ behavior: 'smooth' })
 
   return (
-    <section id="hero" className="hero-bg relative overflow-hidden min-h-[92vh] flex flex-col justify-center">
+    <section id="hero" className="relative overflow-hidden min-h-[92vh] flex flex-col justify-center">
+
+      {/* Moving farm photo backdrop */}
+      <HeroPhotos />
+
+      {/* Gradient scrim over the photos */}
+      <div className="hero-bg absolute inset-0 opacity-70" />
 
       {/* Centre radial spotlight */}
       <div className="absolute inset-0 pointer-events-none"

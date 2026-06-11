@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { BarChart3, Target, Sprout } from 'lucide-react'
 import { useLang } from '../context/LangContext'
 
 const LEAVES = [
@@ -14,9 +13,9 @@ const LEAVES = [
 ]
 
 const STATS = [
-  { val: '216',  lblKey: 'hero_stat1_lbl', icon: BarChart3 },
-  { val: '0.67', lblKey: 'hero_stat2_lbl', icon: Target },
-  { val: '2',    lblKey: 'hero_stat3_lbl', icon: Sprout },
+  { val: '216',  lblKey: 'hero_stat1_lbl', icon: '📊' },
+  { val: '0.67', lblKey: 'hero_stat2_lbl', icon: '🎯' },
+  { val: '2',    lblKey: 'hero_stat3_lbl', icon: '🌱' },
 ]
 
 export default function Hero() {
@@ -113,14 +112,14 @@ export default function Hero() {
           transition={{ delay: 0.6 }}
           className="grid grid-cols-3 gap-4 w-full max-w-lg mx-auto"
         >
-          {STATS.map(({ val, lblKey, icon: Icon }, i) => (
+          {STATS.map(({ val, lblKey, icon }, i) => (
             <motion.div
               key={lblKey}
               whileHover={{ y: -4, scale: 1.04 }}
               transition={{ type: 'spring', stiffness: 300 }}
               className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/15 shadow-xl cursor-default"
             >
-              <Icon className="w-6 h-6 text-harvest-300 mb-2" strokeWidth={1.75} />
+              <div className="text-2xl mb-2">{icon}</div>
               <div className="text-3xl font-extrabold text-white tracking-tight">{val}</div>
               <div className="text-harvest-300 text-xs font-medium mt-1 leading-snug">{t(lblKey)}</div>
             </motion.div>

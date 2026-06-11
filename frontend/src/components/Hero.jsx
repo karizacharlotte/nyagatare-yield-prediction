@@ -68,7 +68,7 @@ export default function Hero() {
       <HeroPhotos />
 
       {/* Gradient scrim over the photos */}
-      <div className="hero-bg absolute inset-0 opacity-70" />
+      <div className="hero-bg absolute inset-0 opacity-80" />
 
       {/* Centre radial spotlight */}
       <div className="absolute inset-0 pointer-events-none"

@@ -6,6 +6,7 @@ import Hero from './components/Hero'
 import PredictionForm from './components/PredictionForm'
 import About from './components/About'
 import Footer from './components/Footer'
+import ContactWidget from './components/ContactWidget'
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
             <About />
           </main>
           <Footer />
+          <ContactWidget />
         </div>
       </LangProvider>
     </ThemeProvider>

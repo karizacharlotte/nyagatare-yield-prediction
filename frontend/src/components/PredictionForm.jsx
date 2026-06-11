@@ -159,7 +159,7 @@ export default function PredictionForm() {
                   <motion.img
                     src={c === 'bean' ? beansImg : riceImg}
                     alt=""
-                    className="w-8 h-8 rounded-full object-cover ring-2 ring-white dark:ring-zinc-800 shadow"
+                    className="w-14 h-14 rounded-full object-cover ring-2 ring-white dark:ring-zinc-800 shadow mb-1"
                     animate={{ y: [0, -4, 0], rotate: [0, -6, 6, 0] }}
                     transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut', delay: c === 'bean' ? 0 : 0.4 }}
                   />

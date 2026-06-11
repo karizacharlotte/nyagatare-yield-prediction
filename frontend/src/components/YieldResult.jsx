@@ -5,6 +5,7 @@ import { useLang } from '../context/LangContext'
 const NATIONAL_AVG = { bean: 1.2, rice: 5.0 }
 
 function GaugeBar({ low, predicted, high, crop }) {
+  const { t } = useLang()
   // display range: 0 to max(high * 1.2, nationalAvg * 1.5)
   const max = Math.max(high * 1.25, (NATIONAL_AVG[crop] ?? 5) * 1.6)
   const pctLow  = (low       / max) * 100
@@ -44,7 +45,7 @@ function GaugeBar({ low, predicted, high, crop }) {
         <span>0</span>
         <div className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-gold-500 inline-block opacity-70" />
-          <span>National avg {NATIONAL_AVG[crop]} t/ha</span>
+          <span>{t('gauge_national_avg')} {NATIONAL_AVG[crop]} t/ha</span>
         </div>
         <span>{max.toFixed(1)} t/ha</span>
       </div>
@@ -60,13 +61,14 @@ function GaugeBar({ low, predicted, high, crop }) {
 }
 
 function ConfidenceBadge({ r2 }) {
+  const { t } = useLang()
   const level = r2 >= 0.65 ? 'high' : r2 >= 0.5 ? 'medium' : 'low'
   const styles = {
     high:   'bg-harvest-100 dark:bg-harvest-900 text-harvest-800 dark:text-harvest-200 border-harvest-300 dark:border-harvest-700',
     medium: 'bg-gold-100 dark:bg-gold-900/30 text-gold-800 dark:text-gold-300 border-gold-300 dark:border-gold-700/60',
     low:    'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800/60',
   }
-  const labels = { high: 'High', medium: 'Moderate', low: 'Low' }
+  const labels = { high: t('confidence_high'), medium: t('confidence_medium'), low: t('confidence_low') }
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${styles[level]}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${level === 'high' ? 'bg-harvest-600' : level === 'medium' ? 'bg-gold-600' : 'bg-red-500'}`}/>
@@ -100,7 +102,7 @@ export default function YieldResult({ data, crop }) {
       <div className="bg-gradient-to-r from-harvest-700 to-harvest-500 px-6 py-4 flex items-center justify-between">
         <div>
           <p className="text-harvest-100 text-xs font-semibold uppercase tracking-widest">{t('result_title')}</p>
-          <p className="text-white text-sm capitalize">{crop} crop prediction</p>
+          <p className="text-white text-sm capitalize">{crop === 'bean' ? t('result_subtitle_bean') : t('result_subtitle_rice')}</p>
         </div>
         <span className="text-4xl">{cropIcon}</span>
       </div>
@@ -118,7 +120,7 @@ export default function YieldResult({ data, crop }) {
           >
             {pred.toFixed(2)}
           </motion.div>
-          <p className="text-gray-400 dark:text-zinc-500 text-sm mt-1">{t('result_unit')} — tonnes per hectare</p>
+          <p className="text-gray-400 dark:text-zinc-500 text-sm mt-1">{t('result_unit')} — {t('result_unit_long')}</p>
         </div>
 
         {/* vs National avg chip */}
@@ -126,7 +128,7 @@ export default function YieldResult({ data, crop }) {
           <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold ${
             isAbove ? 'bg-harvest-100 dark:bg-harvest-900 text-harvest-800 dark:text-harvest-200' : 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300'
           }`}>
-            {isAbove ? '▲' : '▼'} {Math.abs(vsNat)}% {isAbove ? 'above' : 'below'} national average
+            {isAbove ? '▲' : '▼'} {Math.abs(vsNat)}% {isAbove ? t('result_above') : t('result_below')} {t('result_vs_national')}
           </span>
         </div>
 

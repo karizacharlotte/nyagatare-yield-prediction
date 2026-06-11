@@ -9,13 +9,14 @@ import json
 import numpy as np
 import pandas as pd
 import joblib
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, send_from_directory
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
-BASE_DIR   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODELS_DIR = os.path.join(BASE_DIR, 'models')
+BASE_DIR     = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODELS_DIR   = os.path.join(BASE_DIR, 'models')
+FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend', 'dist')
 
-app = Flask(__name__, template_folder='templates', static_folder='static')
+app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path='')
 
 # ── Load models once at startup ───────────────────────────────────────────────
 bean_model = joblib.load(os.path.join(MODELS_DIR, 'bean_model.pkl'))
@@ -230,7 +231,7 @@ def build_feature_row(crop, data):
 
 @app.route('/')
 def index():
-    return render_template('index.html', model_meta=MODEL_META)
+    return send_from_directory(FRONTEND_DIR, 'index.html')
 
 
 @app.route('/apidocs')

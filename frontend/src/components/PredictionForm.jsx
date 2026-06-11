@@ -212,7 +212,7 @@ export default function PredictionForm() {
                 </div>
                 <div>
                   <FormLabel main={t('form_rain')} />
-                  <FormInput id="rain" value={rain} onChange={setRain} min={50} max={900} step={10} />
+                  <FormInput id="rain" value={rain} onChange={setRain} min={50} max={900} step={0.1} />
                 </div>
               </div>
 

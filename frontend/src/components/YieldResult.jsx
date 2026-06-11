@@ -109,7 +109,7 @@ export default function YieldResult({ data, crop }) {
         <motion.img
           src={cropImg}
           alt=""
-          className="w-12 h-12 rounded-full object-cover ring-2 ring-white/70 shadow-md"
+          className="w-16 h-12 rounded-xl object-cover ring-2 ring-white/70 shadow-md"
           initial={{ opacity: 0, scale: 0.5, rotate: -15 }}
           animate={{ opacity: 1, scale: 1, rotate: 0, y: [0, -5, 0] }}
           transition={{

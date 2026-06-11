@@ -117,11 +117,11 @@ export default function Hero() {
               key={lblKey}
               whileHover={{ y: -4, scale: 1.04 }}
               transition={{ type: 'spring', stiffness: 300 }}
-              className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/15 shadow-xl cursor-default"
+              className="relative bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/15 shadow-xl cursor-default overflow-hidden"
             >
-              <div className="text-2xl mb-2">{icon}</div>
-              <div className="text-3xl font-extrabold text-white tracking-tight">{val}</div>
-              <div className="text-harvest-300 text-xs font-medium mt-1 leading-snug">{t(lblKey)}</div>
+              <div className="absolute -top-3 -left-3 text-6xl opacity-15 -rotate-12">{icon}</div>
+              <div className="relative text-3xl font-extrabold text-white tracking-tight">{val}</div>
+              <div className="relative text-harvest-300 text-xs font-medium mt-1 leading-snug">{t(lblKey)}</div>
             </motion.div>
           ))}
         </motion.div>

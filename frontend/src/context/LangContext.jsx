@@ -65,6 +65,18 @@ const STRINGS = {
     confidence_high: 'High',
     confidence_medium: 'Moderate',
     confidence_low: 'Low',
+    advice_title: 'Recommendations',
+    tip_fertiliser_full: 'Great — full NPK fertiliser application supports strong yields.',
+    tip_fertiliser_missing: 'Adding {nutrients} fertiliser could help improve your yield.',
+    tip_rainfall_low: 'Rainfall ({value} mm) is lower than ideal for this crop — irrigation or water harvesting could help.',
+    tip_rainfall_high: 'Rainfall ({value} mm) is higher than ideal — ensure good drainage to avoid waterlogging.',
+    tip_temp_high: 'Average temperature ({value}°C) is above the ideal range — mulching or shade can reduce heat stress.',
+    tip_temp_low: 'Average temperature ({value}°C) is below the ideal range for this crop.',
+    tip_season_short: 'A growing period of {value} days is shorter than typical — harvesting too early can reduce yield.',
+    tip_season_long: 'A growing period of {value} days is longer than typical — watch for pest and disease pressure during the extra time.',
+    tip_yield_above_avg: 'Your predicted yield is above the national average — your current practices look effective.',
+    tip_yield_below_avg: 'Your predicted yield is below the national average — reviewing fertiliser, timing, and soil management may help.',
+    tip_confidence_low: 'This estimate has lower model confidence — use it as a guide and consult a local agronomist for field-specific advice.',
     about_title: 'About This Project',
     about_body: 'This system uses machine learning (Random Forest & Gradient Boosting) trained on RAB field trial data from Nyagatare District to predict crop yields based on fertiliser treatment, location, climate, and growing season.',
     step1_title: 'RAB Field Trials',
@@ -151,6 +163,18 @@ const STRINGS = {
     confidence_high: 'Hejuru',
     confidence_medium: 'Hagati',
     confidence_low: 'Hasi',
+    advice_title: 'Inama',
+    tip_fertiliser_full: 'Byiza! Gukoresha ifumbire NPK yose bifasha kongera umusaruro.',
+    tip_fertiliser_missing: 'Kongeramo ifumbire ya {nutrients} byafasha kongera umusaruro wawe.',
+    tip_rainfall_low: 'Imvura ({value} mm) ni nke kuruta uko bikenewe kuri uyu mwaka — kuhira cyangwa kubika amazi byafasha.',
+    tip_rainfall_high: 'Imvura ({value} mm) ni nyinshi kuruta uko bikenewe — reba ko amazi atemba neza kugira ngo hatabaho kwishyura kw\'amazi.',
+    tip_temp_high: 'Ubushyuhe ({value}°C) buri hejuru y\'urugero rukwiye — gupfukirira ubutaka cyangwa igicucu byafasha kugabanya ubushyuhe.',
+    tip_temp_low: 'Ubushyuhe ({value}°C) buri munsi y\'urugero rukwiye kuri uyu mwaka.',
+    tip_season_short: 'Igihe cyo gukura cy\'iminsi {value} ni gito kuruta uko bisanzwe — gusarura hakiri kare bishobora kugabanya umusaruro.',
+    tip_season_long: 'Igihe cyo gukura cy\'iminsi {value} ni kirekire kuruta uko bisanzwe — itegereze ibyonnyi n\'indwara mu gihe cyongerewe.',
+    tip_yield_above_avg: 'Umusaruro witezwe uri hejuru y\'impuzandengo y\'igihugu — uburyo ukoresha burakora neza.',
+    tip_yield_below_avg: 'Umusaruro witezwe uri munsi y\'impuzandengo y\'igihugu — kongera kureba ifumbire, igihe cyo gutera, n\'imicungire y\'ubutaka byafasha.',
+    tip_confidence_low: 'Iyi ngano y\'umusaruro ifite icyizere gito — yifashishe nk\'urugero kandi ubaze umuhinzi w\'inzobere wo mu karere kawe.',
     about_title: 'Inyandiko y\'Umushinga',
     about_body: 'Iyi sisitemu ikoresha uburyo bwa machine learning (Random Forest na Gradient Boosting) yigijwe ku makuru ya RAB avuye muri Nyagatare kugirango iteganya umusaruro.',
     step1_title: 'Ibigeragezo bya RAB',
@@ -179,7 +203,15 @@ const LangContext = createContext()
 
 export function LangProvider({ children }) {
   const [lang, setLang] = useState('en')
-  const t = (key) => STRINGS[lang][key] ?? key
+  const t = (key, params) => {
+    let str = STRINGS[lang][key] ?? key
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        str = str.replaceAll(`{${k}}`, v)
+      })
+    }
+    return str
+  }
   return (
     <LangContext.Provider value={{ lang, setLang, t, STRINGS }}>
       {children}

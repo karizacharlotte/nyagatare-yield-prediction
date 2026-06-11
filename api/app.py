@@ -37,6 +37,66 @@ ENCODINGS = {
     },
 }
 
+# ── Farming advice rules ───────────────────────────────────────────────────────
+# Rwanda national average yields (t/ha), used to judge whether a prediction is
+# above/below average — kept in sync with frontend NATIONAL_AVG in YieldResult.jsx
+NATIONAL_AVG = {'bean': 1.2, 'rice': 5.0}
+
+# Rule-of-thumb agronomic ranges centred on the dataset's typical values
+ADVICE_RANGES = {
+    'bean': {'rainfall': (250, 500), 'temp': (18, 30), 'growing_days': (75, 110)},
+    'rice': {'rainfall': (300, 500), 'temp': (20, 32), 'growing_days': (110, 160)},
+}
+
+
+def generate_advice(crop, data, prediction, r2):
+    """Return a list of {code, params} tips describing how the farmer's
+    inputs compare to agronomic norms. Codes map to translated message
+    templates on the frontend (see LangContext tip_* keys)."""
+    tips = []
+    rng = ADVICE_RANGES[crop]
+
+    has_N = int(data.get('has_N', 0))
+    has_P = int(data.get('has_P', 0))
+    has_K = int(data.get('has_K', 0))
+    missing = [n for n, has in (('N', has_N), ('P', has_P), ('K', has_K)) if not has]
+    if missing:
+        tips.append({'code': 'fertiliser_missing', 'params': {'nutrients': missing}})
+    else:
+        tips.append({'code': 'fertiliser_full', 'params': {}})
+
+    rainfall = float(data.get('total_rainfall_mm', 0))
+    rmin, rmax = rng['rainfall']
+    if rainfall < rmin:
+        tips.append({'code': 'rainfall_low', 'params': {'value': round(rainfall)}})
+    elif rainfall > rmax:
+        tips.append({'code': 'rainfall_high', 'params': {'value': round(rainfall)}})
+
+    temp = float(data.get('mean_temp_C', 0))
+    tmin, tmax = rng['temp']
+    if temp > tmax:
+        tips.append({'code': 'temp_high', 'params': {'value': round(temp, 1)}})
+    elif temp < tmin:
+        tips.append({'code': 'temp_low', 'params': {'value': round(temp, 1)}})
+
+    days = float(data.get('growing_days', 0))
+    dmin, dmax = rng['growing_days']
+    if days < dmin:
+        tips.append({'code': 'season_short', 'params': {'value': round(days)}})
+    elif days > dmax:
+        tips.append({'code': 'season_long', 'params': {'value': round(days)}})
+
+    avg = NATIONAL_AVG[crop]
+    if prediction >= avg * 1.15:
+        tips.append({'code': 'yield_above_avg', 'params': {}})
+    elif prediction < avg * 0.85:
+        tips.append({'code': 'yield_below_avg', 'params': {}})
+
+    if r2 < 0.65:
+        tips.append({'code': 'confidence_low', 'params': {}})
+
+    return tips
+
 # ── OpenAPI spec ──────────────────────────────────────────────────────────────
 OPENAPI_SPEC = {
     'openapi': '3.0.3',
@@ -148,6 +208,11 @@ OPENAPI_SPEC = {
                             'high_estimate_t_ha': 2.94,
                             'model_r2': 0.494,
                             'model_rmse': 0.316,
+                            'advice': [
+                                {'code': 'fertiliser_full', 'params': {}},
+                                {'code': 'yield_above_avg', 'params': {}},
+                                {'code': 'confidence_low', 'params': {}},
+                            ],
                             'inputs_received': {'crop': 'bean', 'has_N': 1},
                         }}},
                     },
@@ -282,6 +347,7 @@ def predict():
         'high_estimate_t_ha':   round(prediction + rmse, 3),
         'model_r2':             meta['cv_r2'],
         'model_rmse':           rmse,
+        'advice':               generate_advice(crop, data, prediction, meta['cv_r2']),
         'inputs_received':      data,
     })
 

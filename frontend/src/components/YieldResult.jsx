@@ -118,7 +118,7 @@ function ConfidenceBadge({ r2 }) {
 export default function YieldResult({ data, crop }) {
   const { t } = useLang()
   const { predicted_yield_t_ha: pred, low_estimate_t_ha: low,
-          high_estimate_t_ha: high, model_r2: r2, model_rmse: rmse } = data
+          high_estimate_t_ha: high, model_r2: r2, model_rmse: rmse, advice = [] } = data
 
   const avg = NATIONAL_AVG[crop] ?? 5
   const vsNat = ((pred - avg) / avg * 100).toFixed(0)
@@ -130,6 +130,8 @@ export default function YieldResult({ data, crop }) {
                   : t('result_low')
 
   const isHighConfidence = r2 >= 0.65
+
+  const NUTRIENT_LABELS = { N: t('nutrient_n'), P: t('nutrient_p'), K: t('nutrient_k') }
 
   const cropImg = crop === 'bean' ? beansImg : riceImg
 
@@ -220,6 +222,26 @@ export default function YieldResult({ data, crop }) {
         }`}>
           {resultMsg}
         </motion.div>
+
+        {/* Recommendations */}
+        {advice.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-gray-500 dark:text-zinc-500 uppercase tracking-wide mb-2">{t('advice_title')}</p>
+            <ul className="space-y-2">
+              {advice.map((tip, i) => {
+                const params = tip.params?.nutrients
+                  ? { ...tip.params, nutrients: tip.params.nutrients.map(n => NUTRIENT_LABELS[n]).join(', ') }
+                  : tip.params
+                return (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-600 dark:text-zinc-300">
+                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-harvest-500 shrink-0" />
+                    <span>{t(`tip_${tip.code}`, params)}</span>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        )}
 
         <p className="text-center text-gray-400 dark:text-zinc-500 text-xs">{t('result_note')}</p>
       </div>

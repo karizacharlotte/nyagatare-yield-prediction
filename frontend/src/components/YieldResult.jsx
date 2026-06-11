@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useLang } from '../context/LangContext'
 import beansImg from '../assets/crops/beans.jpg'
@@ -5,6 +6,41 @@ import riceImg from '../assets/crops/rice.jpg'
 
 // Rwanda national averages (t/ha) for comparison
 const NATIONAL_AVG = { bean: 1.2, rice: 5.0 }
+
+const CONFETTI_COLORS = ['#22c55e', '#4ade80', '#facc15', '#fb923c', '#f87171', '#60a5fa', '#c084fc']
+
+// Deterministic pseudo-random in [0, 1), so confetti layout stays a pure function of `seed`
+function rand(seed) {
+  const x = Math.sin(seed) * 43758.5453123
+  return x - Math.floor(x)
+}
+
+function Confetti({ seed }) {
+  const pieces = useMemo(() => Array.from({ length: 22 }, (_, i) => ({
+    id: i,
+    x: (rand(seed + i * 7.13) - 0.5) * 320,
+    y: 100 + rand(seed + i * 13.37) * 180,
+    rotate: (rand(seed + i * 3.71) - 0.5) * 480,
+    delay: rand(seed + i * 9.23) * 0.25,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    size: 6 + rand(seed + i * 1.61) * 6,
+  })), [seed])
+
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden z-10">
+      {pieces.map(p => (
+        <motion.span
+          key={p.id}
+          className="absolute left-1/2 top-10 rounded-sm"
+          style={{ width: p.size, height: p.size, backgroundColor: p.color }}
+          initial={{ opacity: 1, x: 0, y: 0, rotate: 0, scale: 0 }}
+          animate={{ opacity: [1, 1, 0], x: p.x, y: p.y, rotate: p.rotate, scale: 1 }}
+          transition={{ duration: 1.6, delay: p.delay, ease: 'easeOut' }}
+        />
+      ))}
+    </div>
+  )
+}
 
 function GaugeBar({ low, predicted, high, crop }) {
   const { t } = useLang()
@@ -88,7 +124,8 @@ export default function YieldResult({ data, crop }) {
   const vsNat = ((pred - avg) / avg * 100).toFixed(0)
   const isAbove = pred > avg
 
-  const resultMsg = pred >= avg * 1.15 ? t('result_high')
+  const isHigh = pred >= avg * 1.15
+  const resultMsg = isHigh ? t('result_high')
                   : pred >= avg * 0.85 ? t('result_avg')
                   : t('result_low')
 
@@ -98,8 +135,10 @@ export default function YieldResult({ data, crop }) {
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-zinc-900 rounded-3xl shadow-xl border border-harvest-100 dark:border-zinc-800 overflow-hidden transition-colors"
+      className="relative bg-white dark:bg-zinc-900 rounded-3xl shadow-xl border border-harvest-100 dark:border-zinc-800 overflow-hidden transition-colors"
     >
+      {isHigh && <Confetti key={pred} seed={pred} />}
+
       {/* Top banner */}
       <div className="bg-gradient-to-r from-harvest-700 to-harvest-500 px-6 py-4 flex items-center justify-between">
         <div>
@@ -167,13 +206,18 @@ export default function YieldResult({ data, crop }) {
         </div>
 
         {/* Result message */}
-        <div className={`rounded-2xl px-4 py-3 text-sm font-medium text-center ${
-          pred >= avg * 1.15 ? 'bg-harvest-100 dark:bg-harvest-900 text-harvest-800 dark:text-harvest-200 border border-harvest-200 dark:border-harvest-700'
+        <motion.div
+          key={resultMsg}
+          initial={isHigh ? { scale: 0.85 } : false}
+          animate={isHigh ? { scale: [0.85, 1.06, 1] } : {}}
+          transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
+          className={`rounded-2xl px-4 py-3 text-sm font-medium text-center ${
+          isHigh ? 'bg-harvest-100 dark:bg-harvest-900 text-harvest-800 dark:text-harvest-200 border border-harvest-200 dark:border-harvest-700'
         : pred >= avg * 0.85 ? 'bg-gold-50 dark:bg-gold-900/30 text-gold-800 dark:text-gold-300 border border-gold-200 dark:border-gold-700/60'
         : 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-100 dark:border-red-800/60'
         }`}>
           {resultMsg}
-        </div>
+        </motion.div>
 
         <p className="text-center text-gray-400 dark:text-zinc-500 text-xs">{t('result_note')}</p>
       </div>

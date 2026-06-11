@@ -129,6 +129,8 @@ export default function YieldResult({ data, crop }) {
                   : pred >= avg * 0.85 ? t('result_avg')
                   : t('result_low')
 
+  const isHighConfidence = r2 >= 0.65
+
   const cropImg = crop === 'bean' ? beansImg : riceImg
 
   return (
@@ -137,7 +139,7 @@ export default function YieldResult({ data, crop }) {
       animate={{ opacity: 1, y: 0 }}
       className="relative bg-white dark:bg-zinc-900 rounded-3xl shadow-xl border border-harvest-100 dark:border-zinc-800 overflow-hidden transition-colors"
     >
-      {isHigh && <Confetti key={pred} seed={pred} />}
+      {isHighConfidence && <Confetti key={pred} seed={pred} />}
 
       {/* Top banner */}
       <div className="bg-gradient-to-r from-harvest-700 to-harvest-500 px-6 py-4 flex items-center justify-between">
@@ -208,8 +210,8 @@ export default function YieldResult({ data, crop }) {
         {/* Result message */}
         <motion.div
           key={resultMsg}
-          initial={isHigh ? { scale: 0.85 } : false}
-          animate={isHigh ? { scale: [0.85, 1.06, 1] } : {}}
+          initial={isHighConfidence ? { scale: 0.85 } : false}
+          animate={isHighConfidence ? { scale: [0.85, 1.06, 1] } : {}}
           transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
           className={`rounded-2xl px-4 py-3 text-sm font-medium text-center ${
           isHigh ? 'bg-harvest-100 dark:bg-harvest-900 text-harvest-800 dark:text-harvest-200 border border-harvest-200 dark:border-harvest-700'

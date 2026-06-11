@@ -21,8 +21,8 @@ export default function NPKToggle({ values, onChange }) {
             onClick={() => onChange(key, !active)}
             className={`relative rounded-xl border-2 p-3 text-center transition-all duration-200 ${
               active
-                ? `border-harvest-500 bg-harvest-50 dark:bg-harvest-900/60 ${ring} ring-1`
-                : 'border-gray-200 dark:border-harvest-700 bg-white dark:bg-harvest-900 hover:border-harvest-300 dark:hover:border-harvest-500'
+                ? `border-harvest-500 bg-harvest-50 dark:bg-zinc-800 ${ring} ring-1`
+                : 'border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-harvest-300 dark:hover:border-harvest-500'
             }`}
           >
             {active && (
@@ -39,7 +39,7 @@ export default function NPKToggle({ values, onChange }) {
             <span className={`inline-flex w-8 h-8 rounded-full items-center justify-center text-white font-bold text-sm mb-1 ${color}`}>
               {label}
             </span>
-            <div className="text-xs font-semibold text-gray-700 dark:text-harvest-100">{t(tKey)}</div>
+            <div className="text-xs font-semibold text-gray-700 dark:text-zinc-100">{t(tKey)}</div>
           </motion.button>
         )
       })}

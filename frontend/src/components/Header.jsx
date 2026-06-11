@@ -15,7 +15,7 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-harvest-950/95 backdrop-blur border-b border-harvest-800/60 shadow-lg">
+    <header className="sticky top-0 z-50 bg-harvest-950/95 dark:bg-zinc-900/95 backdrop-blur border-b border-harvest-800/60 dark:border-zinc-800 shadow-lg">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
         {/* Logo */}
@@ -45,7 +45,7 @@ export default function Header() {
             <button
               key={id}
               onClick={() => scrollTo(id)}
-              className="px-4 py-2 text-harvest-200 hover:text-white hover:bg-harvest-800/50 rounded-lg text-sm font-medium transition-all"
+              className="px-4 py-2 text-harvest-200 hover:text-white hover:bg-harvest-800/50 dark:hover:bg-zinc-800 rounded-lg text-sm font-medium transition-all"
             >
               {t(key)}
             </button>
@@ -55,7 +55,7 @@ export default function Header() {
         {/* Right controls */}
         <div className="flex items-center gap-3">
           {/* Language toggle */}
-          <div className="flex bg-harvest-900 rounded-full p-0.5 border border-harvest-700">
+          <div className="flex bg-harvest-900 dark:bg-zinc-800 rounded-full p-0.5 border border-harvest-700 dark:border-zinc-700">
             {['en','rw'].map(l => (
               <button
                 key={l}
@@ -63,7 +63,7 @@ export default function Header() {
                 className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                   lang === l
                     ? 'bg-harvest-500 text-white shadow'
-                    : 'text-harvest-400 hover:text-harvest-200'
+                    : 'text-harvest-400 hover:text-harvest-200 dark:hover:text-zinc-200'
                 }`}
               >
                 {l === 'en' ? 'EN' : 'RW'}
@@ -75,7 +75,7 @@ export default function Header() {
           <button
             onClick={toggleTheme}
             aria-label="Toggle dark mode"
-            className="relative w-9 h-9 flex items-center justify-center rounded-full bg-harvest-900 border border-harvest-700 text-harvest-300 hover:text-white hover:border-harvest-500 transition-colors overflow-hidden"
+            className="relative w-9 h-9 flex items-center justify-center rounded-full bg-harvest-900 dark:bg-zinc-800 border border-harvest-700 dark:border-zinc-700 text-harvest-300 hover:text-white hover:border-harvest-500 transition-colors overflow-hidden"
           >
             <AnimatePresence mode="wait" initial={false}>
               <motion.span
@@ -108,13 +108,13 @@ export default function Header() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-harvest-950 border-t border-harvest-800/60 px-4 pb-3"
+            className="md:hidden bg-harvest-950 dark:bg-zinc-900 border-t border-harvest-800/60 dark:border-zinc-800 px-4 pb-3"
           >
             {[['hero','nav_home'],['predict','nav_predict'],['about','nav_about']].map(([id,key]) => (
               <button
                 key={id}
                 onClick={() => scrollTo(id)}
-                className="block w-full text-left px-3 py-2.5 text-harvest-200 hover:text-white hover:bg-harvest-800/50 rounded-lg text-sm"
+                className="block w-full text-left px-3 py-2.5 text-harvest-200 hover:text-white hover:bg-harvest-800/50 dark:hover:bg-zinc-800 rounded-lg text-sm"
               >
                 {t(key)}
               </button>

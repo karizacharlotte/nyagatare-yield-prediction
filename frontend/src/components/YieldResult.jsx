@@ -15,7 +15,7 @@ function GaugeBar({ low, predicted, high, crop }) {
   return (
     <div className="mt-5 space-y-1">
       {/* Track */}
-      <div className="relative h-5 bg-gray-100 dark:bg-harvest-950 rounded-full overflow-hidden">
+      <div className="relative h-5 bg-gray-100 dark:bg-zinc-950 rounded-full overflow-hidden">
         {/* Range fill */}
         <motion.div
           className="absolute top-0 h-full bg-gradient-to-r from-harvest-200 via-harvest-400 to-harvest-600 rounded-full"
@@ -40,7 +40,7 @@ function GaugeBar({ low, predicted, high, crop }) {
       </div>
 
       {/* Labels */}
-      <div className="flex justify-between text-xs text-gray-400 dark:text-harvest-400/70 px-0.5">
+      <div className="flex justify-between text-xs text-gray-400 dark:text-zinc-500 px-0.5">
         <span>0</span>
         <div className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-gold-500 inline-block opacity-70" />
@@ -52,7 +52,7 @@ function GaugeBar({ low, predicted, high, crop }) {
       {/* Range labels */}
       <div className="flex justify-between text-xs font-medium mt-1">
         <span className="text-harvest-600 dark:text-harvest-400">↑ {low.toFixed(2)}</span>
-        <span className="text-harvest-900 dark:text-harvest-100 font-bold">● {predicted.toFixed(2)}</span>
+        <span className="text-harvest-900 dark:text-zinc-100 font-bold">● {predicted.toFixed(2)}</span>
         <span className="text-harvest-600 dark:text-harvest-400">{high.toFixed(2)} ↑</span>
       </div>
     </div>
@@ -94,7 +94,7 @@ export default function YieldResult({ data, crop }) {
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-harvest-900/40 rounded-3xl shadow-xl border border-harvest-100 dark:border-harvest-800 overflow-hidden transition-colors"
+      className="bg-white dark:bg-zinc-900 rounded-3xl shadow-xl border border-harvest-100 dark:border-zinc-800 overflow-hidden transition-colors"
     >
       {/* Top banner */}
       <div className="bg-gradient-to-r from-harvest-700 to-harvest-500 px-6 py-4 flex items-center justify-between">
@@ -118,7 +118,7 @@ export default function YieldResult({ data, crop }) {
           >
             {pred.toFixed(2)}
           </motion.div>
-          <p className="text-gray-400 dark:text-harvest-400/70 text-sm mt-1">{t('result_unit')} — tonnes per hectare</p>
+          <p className="text-gray-400 dark:text-zinc-500 text-sm mt-1">{t('result_unit')} — tonnes per hectare</p>
         </div>
 
         {/* vs National avg chip */}
@@ -132,7 +132,7 @@ export default function YieldResult({ data, crop }) {
 
         {/* Gauge */}
         <div>
-          <p className="text-xs font-semibold text-gray-500 dark:text-harvest-400/80 uppercase tracking-wide mb-2">{t('result_range')}</p>
+          <p className="text-xs font-semibold text-gray-500 dark:text-zinc-500 uppercase tracking-wide mb-2">{t('result_range')}</p>
           <GaugeBar low={low} predicted={pred} high={high} crop={crop} />
         </div>
 
@@ -143,10 +143,10 @@ export default function YieldResult({ data, crop }) {
             { label: t('result_rmse'), value: `±${rmse}`,  suffix: ' t/ha' },
             { label: t('result_confidence'), component: <ConfidenceBadge r2={r2} /> },
           ].map(({ label, value, suffix, component }) => (
-            <div key={label} className="bg-harvest-50 dark:bg-harvest-950/50 rounded-2xl p-3 text-center border border-harvest-100 dark:border-harvest-800">
-              <p className="text-gray-500 dark:text-harvest-400/80 text-xs mb-1">{label}</p>
+            <div key={label} className="bg-harvest-50 dark:bg-zinc-800/60 rounded-2xl p-3 text-center border border-harvest-100 dark:border-zinc-700">
+              <p className="text-gray-500 dark:text-zinc-500 text-xs mb-1">{label}</p>
               {component || (
-                <p className="text-harvest-800 dark:text-harvest-100 font-bold text-sm">{value}{suffix}</p>
+                <p className="text-harvest-800 dark:text-zinc-100 font-bold text-sm">{value}{suffix}</p>
               )}
             </div>
           ))}
@@ -161,7 +161,7 @@ export default function YieldResult({ data, crop }) {
           {resultMsg}
         </div>
 
-        <p className="text-center text-gray-400 dark:text-harvest-400/70 text-xs">{t('result_note')}</p>
+        <p className="text-center text-gray-400 dark:text-zinc-500 text-xs">{t('result_note')}</p>
       </div>
     </motion.div>
   )

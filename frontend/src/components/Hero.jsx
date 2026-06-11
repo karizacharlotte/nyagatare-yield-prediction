@@ -129,7 +129,7 @@ export default function Hero() {
 
       {/* Wave divider */}
       <div className="absolute bottom-0 left-0 right-0">
-        <svg viewBox="0 0 1440 80" preserveAspectRatio="none" className="w-full h-12 sm:h-20 fill-harvest-50">
+        <svg viewBox="0 0 1440 80" preserveAspectRatio="none" className="w-full h-12 sm:h-20 fill-harvest-50 dark:fill-zinc-900">
           <path d="M0,50 C240,10 480,70 720,40 C960,10 1200,65 1440,30 L1440,80 L0,80 Z"/>
         </svg>
       </div>

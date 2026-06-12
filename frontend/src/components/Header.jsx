@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useLang } from '../context/LangContext'
 import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sun, Moon, Menu, X } from 'lucide-react'
+import { Sun, Moon, Menu, X, User, LogOut } from 'lucide-react'
 
 export default function Header() {
   const { lang, setLang, t } = useLang()
   const { theme, toggleTheme } = useTheme()
+  const { user, authReady, logout, openAuthModal } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
 
   const scrollTo = (id) => {
@@ -54,6 +56,33 @@ export default function Header() {
 
         {/* Right controls */}
         <div className="flex items-center gap-3">
+          {/* Account */}
+          {authReady && (
+            user ? (
+              <div className="hidden sm:flex items-center gap-2">
+                <span className="text-xs font-medium text-harvest-200 dark:text-zinc-300 max-w-[100px] truncate" title={user.phone}>
+                  {user.phone}
+                </span>
+                <button
+                  onClick={logout}
+                  aria-label={t('auth_logout')}
+                  title={t('auth_logout')}
+                  className="w-9 h-9 flex items-center justify-center rounded-full bg-harvest-900 dark:bg-zinc-800 border border-harvest-700 dark:border-zinc-700 text-harvest-300 hover:text-white hover:border-harvest-500 transition-colors"
+                >
+                  <LogOut size={15} />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => openAuthModal('login')}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-harvest-900 dark:bg-zinc-800 border border-harvest-700 dark:border-zinc-700 text-harvest-200 hover:text-white hover:border-harvest-500 transition-colors"
+              >
+                <User size={13} />
+                {t('auth_account')}
+              </button>
+            )
+          )}
+
           {/* Language toggle */}
           <div className="flex bg-harvest-900 dark:bg-zinc-800 rounded-full p-0.5 border border-harvest-700 dark:border-zinc-700">
             {['en','rw'].map(l => (
@@ -119,6 +148,27 @@ export default function Header() {
                 {t(key)}
               </button>
             ))}
+
+            {/* Account (mobile) */}
+            {authReady && (
+              user ? (
+                <button
+                  onClick={() => { logout(); setMenuOpen(false) }}
+                  className="flex items-center gap-2 w-full text-left px-3 py-2.5 text-harvest-200 hover:text-white hover:bg-harvest-800/50 dark:hover:bg-zinc-800 rounded-lg text-sm"
+                >
+                  <LogOut size={14} />
+                  {t('auth_logout')} · {user.phone}
+                </button>
+              ) : (
+                <button
+                  onClick={() => { openAuthModal('login'); setMenuOpen(false) }}
+                  className="flex items-center gap-2 w-full text-left px-3 py-2.5 text-harvest-200 hover:text-white hover:bg-harvest-800/50 dark:hover:bg-zinc-800 rounded-lg text-sm"
+                >
+                  <User size={14} />
+                  {t('auth_account')}
+                </button>
+              )
+            )}
           </motion.div>
         )}
       </AnimatePresence>

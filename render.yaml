@@ -1,3 +1,9 @@
+databases:
+  - name: nyagatare-yield-db
+    plan: free
+    databaseName: yieldwise
+    user: yieldwise
+
 services:
   - type: web
     name: nyagatare-yield-api
@@ -8,4 +14,10 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.11"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nyagatare-yield-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
     rootDir: .

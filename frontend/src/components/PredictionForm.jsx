@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { WifiOff, Clock, Trash2 } from 'lucide-react'
+import { WifiOff, Clock, Trash2, LogIn } from 'lucide-react'
 import { useLang } from '../context/LangContext'
+import { useAuth } from '../context/AuthContext'
 import NPKToggle from './NPKToggle'
 import YieldResult from './YieldResult'
 import beansImg from '../assets/crops/beans.jpg'
@@ -79,6 +80,7 @@ function FormSelect({ id, value, onChange, children }) {
 
 export default function PredictionForm() {
   const { t, lang } = useLang()
+  const { token, openAuthModal } = useAuth()
 
   const [crop, setCrop]       = useState('bean')
   const [npk, setNpk]         = useState({ N: true, P: true, K: true })
@@ -99,10 +101,34 @@ export default function PredictionForm() {
   const [history, setHistory] = useState([])
   const [showHistory, setShowHistory] = useState(false)
 
-  // Restore saved prediction history (if any) so it's available offline.
-  // Stored only in this browser's local storage — never sent to a server,
-  // so other people/devices never see it.
+  // Load prediction history: from the farmer's account when signed in
+  // (synced across devices), otherwise from this browser's local storage
+  // (guest/offline mode — never sent to a server, so others never see it).
   useEffect(() => {
+    setHistory([])
+    setResult(null)
+    setIsCached(false)
+    setCachedAt(null)
+
+    if (token) {
+      fetch('/predictions', { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => (res.ok ? res.json() : { history: [] }))
+        .then(({ history: saved }) => {
+          const entries = (saved || []).map(p => ({ data: p.data, crop: p.crop, savedAt: p.saved_at }))
+          if (entries.length > 0) {
+            setHistory(entries)
+            setResult(entries[0].data)
+            setResultCrop(entries[0].crop)
+            setIsCached(true)
+            setCachedAt(entries[0].savedAt)
+          }
+        })
+        .catch(() => {
+          // offline or request failed — leave the placeholder shown
+        })
+      return
+    }
+
     try {
       const raw = localStorage.getItem(HISTORY_KEY)
       if (raw) {
@@ -118,7 +144,7 @@ export default function PredictionForm() {
     } catch {
       // ignore malformed/unavailable storage
     }
-  }, [])
+  }, [token])
 
   // Track connectivity so we can surface an offline indicator
   useEffect(() => {
@@ -155,10 +181,14 @@ export default function PredictionForm() {
   }
 
   const handleClearHistory = () => {
-    try {
-      localStorage.removeItem(HISTORY_KEY)
-    } catch {
-      // ignore
+    if (token) {
+      fetch('/predictions', { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }).catch(() => {})
+    } else {
+      try {
+        localStorage.removeItem(HISTORY_KEY)
+      } catch {
+        // ignore
+      }
     }
     setHistory([])
     setResult(null)
@@ -189,9 +219,11 @@ export default function PredictionForm() {
     }
 
     try {
+      const headers = { 'Content-Type': 'application/json' }
+      if (token) headers.Authorization = `Bearer ${token}`
       const res  = await fetch('/predict', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(payload),
       })
       const data = await res.json()
@@ -200,13 +232,16 @@ export default function PredictionForm() {
       setResultCrop(crop)
       setIsCached(false)
       setCachedAt(null)
-      const entry = { data, crop, savedAt: Date.now() }
+      // Signed-in farmers' predictions are already saved server-side by /predict.
+      const entry = { data, crop, savedAt: token ? new Date().toISOString() : Date.now() }
       setHistory(prev => {
         const next = [entry, ...prev].slice(0, MAX_HISTORY)
-        try {
-          localStorage.setItem(HISTORY_KEY, JSON.stringify(next))
-        } catch {
-          // storage unavailable — history just won't persist
+        if (!token) {
+          try {
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(next))
+          } catch {
+            // storage unavailable — history just won't persist
+          }
         }
         return next
       })
@@ -417,7 +452,19 @@ export default function PredictionForm() {
                 >
                   <div className="px-4 pt-3 pb-1">
                     <h3 className="text-sm font-bold text-harvest-900 dark:text-zinc-100">{t('history_title')}</h3>
-                    <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">{t('history_private_note')}</p>
+                    <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">
+                      {token ? t('history_signed_in_note') : t('history_private_note')}
+                    </p>
+                    {!token && (
+                      <button
+                        type="button"
+                        onClick={() => openAuthModal('login')}
+                        className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-harvest-600 dark:text-harvest-300 hover:underline"
+                      >
+                        <LogIn size={12} />
+                        {t('history_login_cta')}
+                      </button>
+                    )}
                   </div>
                   <div className="max-h-64 overflow-y-auto px-2 py-1">
                     {history.length === 0 ? (

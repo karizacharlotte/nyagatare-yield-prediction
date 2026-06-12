@@ -6,6 +6,9 @@ __pycache__/
 *.egg-info/
 .env
 
+# Local dev database
+*.db
+
 # Jupyter
 .ipynb_checkpoints/
 

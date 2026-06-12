@@ -5,11 +5,17 @@ Swagger UI available at /apidocs
 """
 
 import os
+import re
 import json
+import datetime
 import numpy as np
 import pandas as pd
 import joblib
 from flask import Flask, request, jsonify, send_from_directory
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from .models import db, User, Prediction
+from .auth import create_token, get_current_user, token_required
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 BASE_DIR     = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -17,6 +23,25 @@ MODELS_DIR   = os.path.join(BASE_DIR, 'models')
 FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend', 'dist')
 
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path='')
+
+# ── Database ──────────────────────────────────────────────────────────────────
+# Defaults to a local SQLite file for development. In production, set
+# DATABASE_URL to a Postgres connection string (see render.yaml) — Render's
+# free web service disk is wiped on every deploy, so SQLite alone won't
+# persist farmer accounts.
+DATABASE_URL = os.environ.get('DATABASE_URL', f"sqlite:///{os.path.join(BASE_DIR, 'yieldwise.db')}")
+if DATABASE_URL.startswith('postgres://'):
+    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
+
+MAX_HISTORY = 10
+PHONE_RE = re.compile(r'^\+?\d{8,15}$')
 
 # ── Load models once at startup ───────────────────────────────────────────────
 bean_model = joblib.load(os.path.join(MODELS_DIR, 'bean_model.pkl'))
@@ -114,7 +139,13 @@ OPENAPI_SPEC = {
     'tags': [
         {'name': 'Prediction', 'description': 'Yield prediction endpoint'},
         {'name': 'Info',       'description': 'API health and model metadata'},
+        {'name': 'Account',    'description': 'Farmer accounts and saved prediction history'},
     ],
+    'components': {
+        'securitySchemes': {
+            'bearerAuth': {'type': 'http', 'scheme': 'bearer', 'bearerFormat': 'JWT'},
+        },
+    },
     'paths': {
         '/health': {
             'get': {
@@ -224,6 +255,120 @@ OPENAPI_SPEC = {
                 },
             }
         },
+        '/auth/signup': {
+            'post': {
+                'tags': ['Account'],
+                'summary': 'Create a farmer account',
+                'description': 'Register with a phone number and password to save prediction history to your account.',
+                'requestBody': {
+                    'required': True,
+                    'content': {'application/json': {
+                        'schema': {
+                            'type': 'object',
+                            'required': ['phone', 'password'],
+                            'properties': {
+                                'phone':    {'type': 'string', 'description': '8-15 digit phone number'},
+                                'password': {'type': 'string', 'format': 'password', 'description': 'At least 6 characters'},
+                            },
+                        },
+                        'example': {'phone': '0788123456', 'password': 'secret123'},
+                    }},
+                },
+                'responses': {
+                    '201': {'description': 'Account created', 'content': {'application/json': {'example': {
+                        'token': '<jwt>', 'user': {'id': 1, 'phone': '0788123456'}
+                    }}}},
+                    '400': {'description': 'Invalid phone or password'},
+                    '409': {'description': 'Phone number already registered'},
+                },
+            }
+        },
+        '/auth/login': {
+            'post': {
+                'tags': ['Account'],
+                'summary': 'Log in to an existing account',
+                'requestBody': {
+                    'required': True,
+                    'content': {'application/json': {
+                        'schema': {
+                            'type': 'object',
+                            'required': ['phone', 'password'],
+                            'properties': {
+                                'phone':    {'type': 'string'},
+                                'password': {'type': 'string', 'format': 'password'},
+                            },
+                        },
+                        'example': {'phone': '0788123456', 'password': 'secret123'},
+                    }},
+                },
+                'responses': {
+                    '200': {'description': 'Login successful', 'content': {'application/json': {'example': {
+                        'token': '<jwt>', 'user': {'id': 1, 'phone': '0788123456'}
+                    }}}},
+                    '401': {'description': 'Invalid phone number or password'},
+                },
+            }
+        },
+        '/auth/me': {
+            'get': {
+                'tags': ['Account'],
+                'summary': 'Get the signed-in user',
+                'security': [{'bearerAuth': []}],
+                'responses': {
+                    '200': {'description': 'Current user', 'content': {'application/json': {'example': {
+                        'user': {'id': 1, 'phone': '0788123456'}
+                    }}}},
+                    '401': {'description': 'Authentication required'},
+                },
+            }
+        },
+        '/predictions': {
+            'get': {
+                'tags': ['Account'],
+                'summary': "Get the signed-in farmer's saved predictions",
+                'security': [{'bearerAuth': []}],
+                'responses': {
+                    '200': {'description': 'Prediction history, most recent first (max 10)', 'content': {'application/json': {'example': {
+                        'history': [
+                            {'id': 12, 'crop': 'rice', 'data': {'predicted_yield_t_ha': 6.18}, 'saved_at': '2026-06-12T05:25:15+00:00'}
+                        ]
+                    }}}},
+                    '401': {'description': 'Authentication required'},
+                },
+            },
+            'delete': {
+                'tags': ['Account'],
+                'summary': "Clear the signed-in farmer's saved predictions",
+                'security': [{'bearerAuth': []}],
+                'responses': {
+                    '200': {'description': 'History cleared', 'content': {'application/json': {'example': {'status': 'ok'}}}},
+                    '401': {'description': 'Authentication required'},
+                },
+            },
+        },
+        '/predictions/import': {
+            'post': {
+                'tags': ['Account'],
+                'summary': 'Import locally-saved predictions into a new account',
+                'description': (
+                    'One-time import for a freshly created account. Used to migrate predictions made '
+                    'while offline/anonymous (stored in the browser) into the farmer\'s new account. '
+                    'No-ops if the account already has saved predictions.'
+                ),
+                'security': [{'bearerAuth': []}],
+                'requestBody': {
+                    'required': True,
+                    'content': {'application/json': {'schema': {
+                        'type': 'object',
+                        'properties': {'entries': {'type': 'array', 'items': {'type': 'object'}}},
+                    }}},
+                },
+                'responses': {
+                    '200': {'description': 'Number of entries imported', 'content': {'application/json': {'example': {'imported': 2}}}},
+                    '401': {'description': 'Authentication required'},
+                },
+            }
+        },
     },
 }
 
@@ -318,6 +463,107 @@ def model_info():
     return jsonify(MODEL_META)
 
 
+# ── Accounts ──────────────────────────────────────────────────────────────────
+# Farmers can optionally create an account (phone number + password) so their
+# prediction history is saved to the server and follows them across devices,
+# instead of staying only in this browser's local storage.
+
+@app.route('/auth/signup', methods=['POST'])
+def signup():
+    data = request.get_json(force=True) or {}
+    phone    = str(data.get('phone', '')).strip().replace(' ', '')
+    password = str(data.get('password', ''))
+
+    if not PHONE_RE.match(phone):
+        return jsonify({'error': 'Enter a valid phone number (8-15 digits)'}), 400
+    if len(password) < 6:
+        return jsonify({'error': 'Password must be at least 6 characters'}), 400
+    if User.query.filter_by(phone=phone).first():
+        return jsonify({'error': 'An account with this phone number already exists'}), 409
+
+    user = User(phone=phone, password_hash=generate_password_hash(password))
+    db.session.add(user)
+    db.session.commit()
+
+    return jsonify({'token': create_token(user.id), 'user': user.to_dict()}), 201
+
+
+@app.route('/auth/login', methods=['POST'])
+def login():
+    data = request.get_json(force=True) or {}
+    phone    = str(data.get('phone', '')).strip().replace(' ', '')
+    password = str(data.get('password', ''))
+
+    user = User.query.filter_by(phone=phone).first()
+    if not user or not check_password_hash(user.password_hash, password):
+        return jsonify({'error': 'Invalid phone number or password'}), 401
+
+    return jsonify({'token': create_token(user.id), 'user': user.to_dict()})
+
+
+@app.route('/auth/me')
+def me():
+    user = get_current_user()
+    if user is None:
+        return jsonify({'error': 'Authentication required'}), 401
+    return jsonify({'user': user.to_dict()})
+
+
+# ── Prediction history ───────────────────────────────────────────────────────
+
+@app.route('/predictions', methods=['GET'])
+@token_required
+def list_predictions(user):
+    preds = (Prediction.query.filter_by(user_id=user.id)
+             .order_by(Prediction.created_at.desc())
+             .limit(MAX_HISTORY).all())
+    return jsonify({'history': [p.to_dict() for p in preds]})
+
+
+@app.route('/predictions', methods=['DELETE'])
+@token_required
+def clear_predictions(user):
+    Prediction.query.filter_by(user_id=user.id).delete()
+    db.session.commit()
+    return jsonify({'status': 'ok'})
+
+
+@app.route('/predictions/import', methods=['POST'])
+@token_required
+def import_predictions(user):
+    """One-time import of a freshly-created account's local (offline)
+    history, so a farmer who used the app before signing up doesn't lose
+    predictions made while offline/anonymous."""
+    if Prediction.query.filter_by(user_id=user.id).first():
+        return jsonify({'imported': 0})
+
+    data = request.get_json(force=True) or {}
+    entries = data.get('entries', [])
+    if not isinstance(entries, list):
+        return jsonify({'error': 'entries must be a list'}), 400
+
+    imported = 0
+    for entry in entries[:MAX_HISTORY]:
+        crop   = entry.get('crop')
+        result = entry.get('data')
+        if crop not in ('bean', 'rice') or not isinstance(result, dict):
+            continue
+
+        pred = Prediction(user_id=user.id, crop=crop, result=result)
+        try:
+            pred.created_at = datetime.datetime.fromtimestamp(
+                float(entry.get('savedAt')) / 1000, tz=datetime.timezone.utc
+            )
+        except (TypeError, ValueError):
+            pass
+
+        db.session.add(pred)
+        imported += 1
+
+    db.session.commit()
+    return jsonify({'imported': imported})
+
+
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.get_json(force=True)
@@ -339,7 +585,7 @@ def predict():
     prediction = float(model.predict(X)[0])
     rmse       = meta['cv_rmse']
 
-    return jsonify({
+    result = {
         'crop':                 crop,
         'predicted_yield_t_ha': round(prediction, 3),
         'low_estimate_t_ha':    round(max(0.0, prediction - rmse), 3),
@@ -348,7 +594,23 @@ def predict():
         'model_rmse':           rmse,
         'advice':               generate_advice(crop, data, prediction, meta['cv_r2']),
         'inputs_received':      data,
-    })
+    }
+
+    # Signed-in farmers get their prediction saved to their account,
+    # capped at MAX_HISTORY most recent entries.
+    user = get_current_user()
+    if user is not None:
+        db.session.add(Prediction(user_id=user.id, crop=crop, result=result))
+        db.session.commit()
+        stale = (Prediction.query.filter_by(user_id=user.id)
+                 .order_by(Prediction.created_at.desc())
+                 .offset(MAX_HISTORY).all())
+        for p in stale:
+            db.session.delete(p)
+        if stale:
+            db.session.commit()
+
+    return jsonify(result)
 
 
 if __name__ == '__main__':

@@ -6,10 +6,11 @@ import { useLang } from '../context/LangContext'
 
 export default function AuthModal() {
   const { t } = useLang()
-  const { authModal, closeAuthModal, login, signup } = useAuth()
+  const { authModal, closeAuthModal, login, signup, resetPassword } = useAuth()
   const [mode, setMode] = useState('login')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
+  const [recoveryWord, setRecoveryWord] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -18,11 +19,19 @@ export default function AuthModal() {
       setMode(authModal)
       setPhone('')
       setPassword('')
+      setRecoveryWord('')
       setError('')
     }
   }, [authModal])
 
   if (!authModal) return null
+
+  const switchMode = (newMode) => {
+    setMode(newMode)
+    setPassword('')
+    setRecoveryWord('')
+    setError('')
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -30,7 +39,9 @@ export default function AuthModal() {
     setLoading(true)
     try {
       if (mode === 'signup') {
-        await signup(phone, password)
+        await signup(phone, password, recoveryWord)
+      } else if (mode === 'reset') {
+        await resetPassword(phone, recoveryWord, password)
       } else {
         await login(phone, password)
       }
@@ -65,10 +76,10 @@ export default function AuthModal() {
           </button>
 
           <h3 className="text-xl font-bold text-harvest-900 dark:text-zinc-100">
-            {mode === 'signup' ? t('auth_signup_title') : t('auth_login_title')}
+            {mode === 'signup' ? t('auth_signup_title') : mode === 'reset' ? t('auth_reset_title') : t('auth_login_title')}
           </h3>
           <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">
-            {mode === 'signup' ? t('auth_signup_subtitle') : t('auth_login_subtitle')}
+            {mode === 'signup' ? t('auth_signup_subtitle') : mode === 'reset' ? t('auth_reset_subtitle') : t('auth_login_subtitle')}
           </p>
 
           <form onSubmit={handleSubmit} className="mt-5 space-y-4">
@@ -85,9 +96,26 @@ export default function AuthModal() {
                 className="w-full px-4 py-2.5 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm bg-white dark:bg-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-harvest-400 focus:border-harvest-400 transition-all"
               />
             </div>
+            {mode === 'reset' && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-zinc-100 mb-1.5">
+                  {t('auth_recovery_word')}
+                </label>
+                <input
+                  type="text"
+                  required
+                  minLength={3}
+                  value={recoveryWord}
+                  onChange={e => setRecoveryWord(e.target.value)}
+                  placeholder={t('auth_recovery_word_placeholder')}
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm bg-white dark:bg-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-harvest-400 focus:border-harvest-400 transition-all"
+                />
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-zinc-100 mb-1.5">
-                {t('auth_password')}
+                {mode === 'reset' ? t('auth_new_password') : t('auth_password')}
               </label>
               <input
                 type="password"
@@ -98,10 +126,37 @@ export default function AuthModal() {
                 placeholder="••••••••"
                 className="w-full px-4 py-2.5 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm bg-white dark:bg-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-harvest-400 focus:border-harvest-400 transition-all"
               />
-              {mode === 'signup' && (
+              {(mode === 'signup' || mode === 'reset') && (
                 <p className="mt-1 text-xs text-gray-400 dark:text-zinc-500">{t('auth_password_hint')}</p>
               )}
+              {mode === 'login' && (
+                <button
+                  type="button"
+                  onClick={() => switchMode('reset')}
+                  className="mt-1.5 text-xs text-harvest-600 dark:text-harvest-300 hover:underline"
+                >
+                  {t('auth_forgot_password')}
+                </button>
+              )}
             </div>
+
+            {mode === 'signup' && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-zinc-100 mb-1.5">
+                  {t('auth_recovery_word')}
+                </label>
+                <input
+                  type="text"
+                  required
+                  minLength={3}
+                  value={recoveryWord}
+                  onChange={e => setRecoveryWord(e.target.value)}
+                  placeholder={t('auth_recovery_word_placeholder')}
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm bg-white dark:bg-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-harvest-400 focus:border-harvest-400 transition-all"
+                />
+                <p className="mt-1 text-xs text-gray-400 dark:text-zinc-500">{t('auth_recovery_word_hint')}</p>
+              </div>
+            )}
 
             <AnimatePresence>
               {error && (
@@ -127,16 +182,16 @@ export default function AuthModal() {
                   : 'bg-gradient-to-r from-harvest-600 to-harvest-500 hover:from-harvest-700 hover:to-harvest-600'
               }`}
             >
-              {loading ? t('auth_loading') : (mode === 'signup' ? t('auth_submit_signup') : t('auth_submit_login'))}
+              {loading ? t('auth_loading') : (mode === 'signup' ? t('auth_submit_signup') : mode === 'reset' ? t('auth_submit_reset') : t('auth_submit_login'))}
             </motion.button>
           </form>
 
           <button
             type="button"
-            onClick={() => { setMode(m => (m === 'signup' ? 'login' : 'signup')); setError('') }}
+            onClick={() => switchMode(mode === 'signup' ? 'login' : mode === 'reset' ? 'login' : 'signup')}
             className="mt-4 w-full text-center text-sm text-harvest-600 dark:text-harvest-300 hover:underline"
           >
-            {mode === 'signup' ? t('auth_switch_to_login') : t('auth_switch_to_signup')}
+            {mode === 'signup' ? t('auth_switch_to_login') : mode === 'reset' ? t('auth_back_to_login') : t('auth_switch_to_signup')}
           </button>
         </motion.div>
       </motion.div>

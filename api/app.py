@@ -258,26 +258,27 @@ OPENAPI_SPEC = {
             'post': {
                 'tags': ['Account'],
                 'summary': 'Create a farmer account',
-                'description': 'Register with a phone number and password to save prediction history to your account.',
+                'description': 'Register with a phone number, password, and recovery word to save prediction history to your account. The recovery word is used to reset your password if you forget it.',
                 'requestBody': {
                     'required': True,
                     'content': {'application/json': {
                         'schema': {
                             'type': 'object',
-                            'required': ['phone', 'password'],
+                            'required': ['phone', 'password', 'recovery_word'],
                             'properties': {
-                                'phone':    {'type': 'string', 'description': '8-15 digit phone number'},
-                                'password': {'type': 'string', 'format': 'password', 'description': 'At least 6 characters'},
+                                'phone':         {'type': 'string', 'description': '8-15 digit phone number'},
+                                'password':      {'type': 'string', 'format': 'password', 'description': 'At least 6 characters'},
+                                'recovery_word': {'type': 'string', 'description': 'At least 3 characters — used to reset your password if forgotten'},
                             },
                         },
-                        'example': {'phone': '0788123456', 'password': 'secret123'},
+                        'example': {'phone': '0788123456', 'password': 'secret123', 'recovery_word': 'sunflower'},
                     }},
                 },
                 'responses': {
                     '201': {'description': 'Account created', 'content': {'application/json': {'example': {
                         'token': '<jwt>', 'user': {'id': 1, 'phone': '0788123456'}
                     }}}},
-                    '400': {'description': 'Invalid phone or password'},
+                    '400': {'description': 'Invalid phone, password, or recovery word'},
                     '409': {'description': 'Phone number already registered'},
                 },
             }
@@ -305,6 +306,35 @@ OPENAPI_SPEC = {
                         'token': '<jwt>', 'user': {'id': 1, 'phone': '0788123456'}
                     }}}},
                     '401': {'description': 'Invalid phone number or password'},
+                },
+            }
+        },
+        '/auth/reset-password': {
+            'post': {
+                'tags': ['Account'],
+                'summary': 'Reset a forgotten password using the recovery word',
+                'description': 'Verify the account phone number and recovery word set at signup, then set a new password. Returns a fresh login token.',
+                'requestBody': {
+                    'required': True,
+                    'content': {'application/json': {
+                        'schema': {
+                            'type': 'object',
+                            'required': ['phone', 'recovery_word', 'new_password'],
+                            'properties': {
+                                'phone':         {'type': 'string'},
+                                'recovery_word': {'type': 'string'},
+                                'new_password':  {'type': 'string', 'format': 'password', 'description': 'At least 6 characters'},
+                            },
+                        },
+                        'example': {'phone': '0788123456', 'recovery_word': 'sunflower', 'new_password': 'newsecret123'},
+                    }},
+                },
+                'responses': {
+                    '200': {'description': 'Password reset', 'content': {'application/json': {'example': {
+                        'token': '<jwt>', 'user': {'id': 1, 'phone': '0788123456'}
+                    }}}},
+                    '400': {'description': 'New password too short'},
+                    '401': {'description': 'Phone number or recovery word is incorrect'},
                 },
             }
         },
@@ -447,17 +477,24 @@ def model_info():
 @app.route('/auth/signup', methods=['POST'])
 def signup():
     data = request.get_json(force=True) or {}
-    phone    = str(data.get('phone', '')).strip().replace(' ', '')
-    password = str(data.get('password', ''))
+    phone         = str(data.get('phone', '')).strip().replace(' ', '')
+    password      = str(data.get('password', ''))
+    recovery_word = str(data.get('recovery_word', '')).strip()
 
     if not PHONE_RE.match(phone):
         return jsonify({'error': 'Enter a valid phone number (8-15 digits)'}), 400
     if len(password) < 6:
         return jsonify({'error': 'Password must be at least 6 characters'}), 400
+    if len(recovery_word) < 3:
+        return jsonify({'error': 'Recovery word must be at least 3 characters'}), 400
     if User.query.filter_by(phone=phone).first():
         return jsonify({'error': 'An account with this phone number already exists'}), 409
 
-    user = User(phone=phone, password_hash=generate_password_hash(password))
+    user = User(
+        phone=phone,
+        password_hash=generate_password_hash(password),
+        recovery_hash=generate_password_hash(recovery_word.lower()),
+    )
     db.session.add(user)
     db.session.commit()
 
@@ -473,6 +510,26 @@ def login():
     user = User.query.filter_by(phone=phone).first()
     if not user or not check_password_hash(user.password_hash, password):
         return jsonify({'error': 'Invalid phone number or password'}), 401
+
+    return jsonify({'token': create_token(user.id), 'user': user.to_dict()})
+
+
+@app.route('/auth/reset-password', methods=['POST'])
+def reset_password():
+    data = request.get_json(force=True) or {}
+    phone         = str(data.get('phone', '')).strip().replace(' ', '')
+    recovery_word = str(data.get('recovery_word', '')).strip()
+    new_password  = str(data.get('new_password', ''))
+
+    if len(new_password) < 6:
+        return jsonify({'error': 'New password must be at least 6 characters'}), 400
+
+    user = User.query.filter_by(phone=phone).first()
+    if not user or not check_password_hash(user.recovery_hash, recovery_word.lower()):
+        return jsonify({'error': 'Phone number or recovery word is incorrect'}), 401
+
+    user.password_hash = generate_password_hash(new_password)
+    db.session.commit()
 
     return jsonify({'token': create_token(user.id), 'user': user.to_dict()})
 

@@ -77,8 +77,10 @@ export function AuthProvider({ children }) {
     setUser(data.user)
   }
 
-  const signup = (phone, password) => request('/auth/signup', { phone, password }).then(applyAuth)
+  const signup = (phone, password, recoveryWord) => request('/auth/signup', { phone, password, recovery_word: recoveryWord }).then(applyAuth)
   const login  = (phone, password) => request('/auth/login', { phone, password }).then(applyAuth)
+  const resetPassword = (phone, recoveryWord, newPassword) =>
+    request('/auth/reset-password', { phone, recovery_word: recoveryWord, new_password: newPassword }).then(applyAuth)
 
   const logout = () => {
     try {
@@ -92,7 +94,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       token, user, authReady,
-      signup, login, logout,
+      signup, login, logout, resetPassword,
       authModal, openAuthModal: setAuthModal, closeAuthModal: () => setAuthModal(null),
     }}>
       {children}

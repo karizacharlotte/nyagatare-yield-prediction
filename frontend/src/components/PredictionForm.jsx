@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { WifiOff } from 'lucide-react'
 import { useLang } from '../context/LangContext'
 import NPKToggle from './NPKToggle'
 import YieldResult from './YieldResult'
 import beansImg from '../assets/crops/beans.jpg'
 import riceImg from '../assets/crops/rice.jpg'
+
+const LAST_RESULT_KEY = 'yieldwise_last_result'
 
 const BEAN_SECTORS   = ['Katabagemu','Rukomo']
 const RICE_SECTORS   = ['Nyagatare','Rukomo','Rwempasha','Tabagwe']
@@ -66,11 +69,44 @@ export default function PredictionForm() {
 
   const [loading, setLoading] = useState(false)
   const [result, setResult]   = useState(null)
+  const [resultCrop, setResultCrop] = useState('bean')
   const [error, setError]     = useState('')
+  const [isCached, setIsCached] = useState(false)
+  const [cachedAt, setCachedAt] = useState(null)
+  const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' && !navigator.onLine)
+
+  // Restore the last saved prediction (if any) so it's available offline
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(LAST_RESULT_KEY)
+      if (raw) {
+        const saved = JSON.parse(raw)
+        setResult(saved.data)
+        setResultCrop(saved.crop)
+        setIsCached(true)
+        setCachedAt(saved.savedAt)
+      }
+    } catch {
+      // ignore malformed/unavailable storage
+    }
+  }, [])
+
+  // Track connectivity so we can surface an offline indicator
+  useEffect(() => {
+    const goOnline  = () => setIsOffline(false)
+    const goOffline = () => setIsOffline(true)
+    window.addEventListener('online', goOnline)
+    window.addEventListener('offline', goOffline)
+    return () => {
+      window.removeEventListener('online', goOnline)
+      window.removeEventListener('offline', goOffline)
+    }
+  }, [])
 
   const handleCropChange = (c) => {
     setCrop(c)
     setResult(null)
+    setIsCached(false)
     setSector(c === 'bean' ? 'Katabagemu' : 'Nyagatare')
     setPrevCrop(c === 'bean' ? 'Maize' : 'Rice')
     setDays(DEFAULT_GROWING[c])
@@ -85,7 +121,6 @@ export default function PredictionForm() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    setResult(null)
 
     const payload = {
       crop,
@@ -110,10 +145,22 @@ export default function PredictionForm() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Prediction failed')
       setResult(data)
+      setResultCrop(crop)
+      setIsCached(false)
+      setCachedAt(null)
+      try {
+        localStorage.setItem(LAST_RESULT_KEY, JSON.stringify({ data, crop, savedAt: Date.now() }))
+      } catch {
+        // storage unavailable — last-result caching just won't persist
+      }
       // Scroll result into view on mobile
       setTimeout(() => document.getElementById('result-card')?.scrollIntoView({ behavior:'smooth', block:'nearest' }), 100)
     } catch (err) {
-      setError(err.message)
+      if (!navigator.onLine) {
+        setError(t('offline_error'))
+      } else {
+        setError(err.message)
+      }
     } finally {
       setLoading(false)
     }
@@ -136,6 +183,19 @@ export default function PredictionForm() {
             {t('form_title')}
           </h2>
           <p className="mt-2 text-gray-500 dark:text-zinc-400 text-sm">{t('form_subtitle')}</p>
+          <AnimatePresence>
+            {isOffline && (
+              <motion.span
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gold-100 dark:bg-gold-900/30 text-gold-800 dark:text-gold-300 border border-gold-300 dark:border-gold-700/60"
+              >
+                <WifiOff size={12} />
+                {t('offline_badge')}
+              </motion.span>
+            )}
+          </AnimatePresence>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 items-start">
@@ -278,7 +338,16 @@ export default function PredictionForm() {
           <div id="result-card">
             <AnimatePresence mode="wait">
               {result ? (
-                <YieldResult key="result" data={result} crop={crop} />
+                <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  {isCached && (
+                    <div className="mb-3 flex items-center justify-center gap-1.5 text-xs font-medium text-gray-500 dark:text-zinc-400">
+                      <WifiOff size={12} />
+                      <span>{t('last_saved_title')}</span>
+                      {cachedAt && <span>· {t('last_saved_on', { date: new Date(cachedAt).toLocaleString() })}</span>}
+                    </div>
+                  )}
+                  <YieldResult data={result} crop={resultCrop} />
+                </motion.div>
               ) : (
                 <motion.div
                   key="placeholder"

@@ -105,6 +105,10 @@ const STRINGS = {
     perf_rmse: 'RMSE',
     stack_label: 'Tech Stack',
     footer_copy: '© 2026 Charlotte Kariza',
+    offline_badge: 'Offline',
+    offline_error: "You're offline — showing your last saved prediction below.",
+    last_saved_title: 'Last saved prediction',
+    last_saved_on: 'Saved {date}',
     months: ['January','February','March','April','May','June','July','August','September','October','November','December'],
   },
   rw: {
@@ -211,6 +215,10 @@ const STRINGS = {
     perf_rmse: 'RMSE',
     stack_label: 'Ikoranabuhanga Ryakoreshejwe',
     footer_copy: '© 2026 Charlotte Kariza',
+    offline_badge: 'Nta interineti',
+    offline_error: 'Nta interineti ufite — reba hepfo iteganyabikorwa ryawe ryanyuma ryabitswe.',
+    last_saved_title: 'Iteganyabikorwa ryanyuma ryabitswe',
+    last_saved_on: 'Ryabitswe {date}',
     months: ['Mutarama','Gashyantare','Werurwe','Mata','Gicurasi','Kamena','Nyakanga','Kanama','Nzeli','Ukwakira','Ugushyingo','Ukuboza'],
   },
 }

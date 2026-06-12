@@ -20,6 +20,10 @@ Machine learning web app that predicts **bean and rice** yields (t/ha) for farme
 
 ![Yield prediction form](notebooks/images/webapp_predict.jpg)
 
+**Prediction result**
+
+![Yield prediction result with confidence badge](notebooks/images/webapp_result.jpg)
+
 **About / model performance**
 
 ![About page with model performance](notebooks/images/webapp_about.jpg)
@@ -41,8 +45,9 @@ Machine learning web app that predicts **bean and rice** yields (t/ha) for farme
 A farmer enters their farm conditions — fertiliser applied (N/P/K), sector, previous crop, planting month, growing days, total rainfall, and mean temperature — and gets back:
 
 - A **predicted yield** (t/ha) with a confidence range (± model RMSE)
+- A **prediction confidence score** — the model's overall R² adjusted up or down depending on how typical the farmer's rainfall, temperature, growing season, and fertiliser use are compared to the training data
 - A comparison against the **national average yield**
-- **Rule-based recommendations** (e.g. fertiliser gaps, rainfall/temperature out of ideal range, season length)
+- **Rule-based recommendations** (e.g. fertiliser gaps, rainfall/temperature out of ideal range, season length, low prediction confidence)
 
 The whole interface is bilingual (English ↔ Kinyarwanda), supports light/dark mode, and works offline as an installable PWA.
 
@@ -166,6 +171,25 @@ Example request to `/predict`:
   "growing_days": 97,
   "total_rainfall_mm": 365.0,
   "mean_temp_C": 28.1
+}
+```
+
+Example response:
+
+```json
+{
+  "crop": "bean",
+  "predicted_yield_t_ha": 2.62,
+  "low_estimate_t_ha": 2.30,
+  "high_estimate_t_ha": 2.94,
+  "model_r2": 0.494,
+  "model_rmse": 0.316,
+  "prediction_confidence": 0.694,
+  "advice": [
+    { "code": "fertiliser_full", "params": {} },
+    { "code": "yield_above_avg", "params": {} }
+  ],
+  "inputs_received": { "...": "..." }
 }
 ```
 

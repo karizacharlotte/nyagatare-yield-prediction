@@ -1,9 +1,9 @@
-# 🌾 YieldWise — Nyagatare Crop Yield Prediction
+# YieldWise — Nyagatare Crop Yield Prediction
 
 Machine learning yield forecasting for **bean and rice farmers** in Nyagatare District, Rwanda. YieldWise predicts expected crop yield (tonnes/hectare) from fertiliser use, location, planting timing, and seasonal climate — and turns that prediction into plain-language farming advice, in **English and Kinyarwanda**.
 
-🔗 **Live app & API:** [nyagatare-yield-api.onrender.com](https://nyagatare-yield-api.onrender.com)
-📑 **API docs (Swagger UI):** [/apidocs](https://nyagatare-yield-api.onrender.com/apidocs)
+**Live app & API:** [nyagatare-yield-api.onrender.com](https://nyagatare-yield-api.onrender.com)
+**API docs (Swagger UI):** [/apidocs](https://nyagatare-yield-api.onrender.com/apidocs)
 
 > Note: the live service is on Render's free tier and may take 30–60s to wake up after inactivity.
 
@@ -41,8 +41,8 @@ Trained on **216 RAB field trial records** from Nyagatare District (5-fold cross
 
 | Crop | Model | R² | RMSE | MAE | Training rows |
 |---|---|---|---|---|---|
-| 🫘 Beans | Random Forest | 0.494 | 0.316 | 0.262 | 96 |
-| 🌾 Rice | Gradient Boosting | 0.674 | 0.848 | 0.629 | 120 |
+| Beans | Random Forest | 0.494 | 0.316 | 0.262 | 96 |
+| Rice | Gradient Boosting | 0.674 | 0.848 | 0.629 | 120 |
 
 See [`notebooks/02_model_training.ipynb`](notebooks/02_model_training.ipynb) for the full EDA, model architecture, hyperparameter search, and performance discussion.
 
@@ -137,4 +137,4 @@ Field trial data from **RAB (Rwanda Agriculture and Animal Resources Development
 ## Author
 
 **Charlotte Kariza**
-📧 c.kariza@alustudent.com
+c.kariza@alustudent.com

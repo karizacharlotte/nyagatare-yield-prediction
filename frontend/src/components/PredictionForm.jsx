@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { WifiOff } from 'lucide-react'
+import { WifiOff, Clock, Trash2 } from 'lucide-react'
 import { useLang } from '../context/LangContext'
 import NPKToggle from './NPKToggle'
 import YieldResult from './YieldResult'
 import beansImg from '../assets/crops/beans.jpg'
 import riceImg from '../assets/crops/rice.jpg'
 
-const LAST_RESULT_KEY = 'yieldwise_last_result'
+const HISTORY_KEY = 'yieldwise_history'
+const MAX_HISTORY = 10
 
 const BEAN_SECTORS   = ['Katabagemu','Rukomo']
 const RICE_SECTORS   = ['Nyagatare','Rukomo','Rwempasha','Tabagwe']
@@ -39,6 +40,27 @@ function FormInput({ id, type = 'number', value, onChange, min, max, step = 1, c
       step={step}
       className={`w-full px-4 py-2.5 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-harvest-400 focus:border-harvest-400 transition-all bg-white dark:bg-zinc-800 dark:text-zinc-100 ${className}`}
     />
+  )
+}
+
+function HistoryItem({ entry, onClick }) {
+  const { t } = useLang()
+  const { data, crop, savedAt } = entry
+  const cropImg = crop === 'bean' ? beansImg : riceImg
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left hover:bg-harvest-50 dark:hover:bg-zinc-800 transition-colors"
+    >
+      <img src={cropImg} alt="" className="w-9 h-9 rounded-full object-cover ring-1 ring-harvest-100 dark:ring-zinc-700 shrink-0" />
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-harvest-900 dark:text-zinc-100">
+          {crop === 'bean' ? t('form_crop_bean') : t('form_crop_rice')} — {data.predicted_yield_t_ha.toFixed(2)} {t('result_unit')}
+        </p>
+        <p className="text-xs text-gray-400 dark:text-zinc-500">{new Date(savedAt).toLocaleString()}</p>
+      </div>
+    </button>
   )
 }
 
@@ -74,17 +96,24 @@ export default function PredictionForm() {
   const [isCached, setIsCached] = useState(false)
   const [cachedAt, setCachedAt] = useState(null)
   const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' && !navigator.onLine)
+  const [history, setHistory] = useState([])
+  const [showHistory, setShowHistory] = useState(false)
 
-  // Restore the last saved prediction (if any) so it's available offline
+  // Restore saved prediction history (if any) so it's available offline.
+  // Stored only in this browser's local storage — never sent to a server,
+  // so other people/devices never see it.
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(LAST_RESULT_KEY)
+      const raw = localStorage.getItem(HISTORY_KEY)
       if (raw) {
         const saved = JSON.parse(raw)
-        setResult(saved.data)
-        setResultCrop(saved.crop)
-        setIsCached(true)
-        setCachedAt(saved.savedAt)
+        if (Array.isArray(saved) && saved.length > 0) {
+          setHistory(saved)
+          setResult(saved[0].data)
+          setResultCrop(saved[0].crop)
+          setIsCached(true)
+          setCachedAt(saved[0].savedAt)
+        }
       }
     } catch {
       // ignore malformed/unavailable storage
@@ -107,12 +136,35 @@ export default function PredictionForm() {
     setCrop(c)
     setResult(null)
     setIsCached(false)
+    setShowHistory(false)
     setSector(c === 'bean' ? 'Katabagemu' : 'Nyagatare')
     setPrevCrop(c === 'bean' ? 'Maize' : 'Rice')
     setDays(DEFAULT_GROWING[c])
     setRain(DEFAULT_RAIN[c])
     setTemp(DEFAULT_TEMP[c])
     setMonth(c === 'bean' ? 9 : 7)
+  }
+
+  const loadFromHistory = (entry) => {
+    setResult(entry.data)
+    setResultCrop(entry.crop)
+    setIsCached(true)
+    setCachedAt(entry.savedAt)
+    setShowHistory(false)
+    setTimeout(() => document.getElementById('result-card')?.scrollIntoView({ behavior:'smooth', block:'nearest' }), 100)
+  }
+
+  const handleClearHistory = () => {
+    try {
+      localStorage.removeItem(HISTORY_KEY)
+    } catch {
+      // ignore
+    }
+    setHistory([])
+    setResult(null)
+    setIsCached(false)
+    setCachedAt(null)
+    setShowHistory(false)
   }
 
   const handleNpk = (key, val) => setNpk(prev => ({ ...prev, [key]: val }))
@@ -148,11 +200,16 @@ export default function PredictionForm() {
       setResultCrop(crop)
       setIsCached(false)
       setCachedAt(null)
-      try {
-        localStorage.setItem(LAST_RESULT_KEY, JSON.stringify({ data, crop, savedAt: Date.now() }))
-      } catch {
-        // storage unavailable — last-result caching just won't persist
-      }
+      const entry = { data, crop, savedAt: Date.now() }
+      setHistory(prev => {
+        const next = [entry, ...prev].slice(0, MAX_HISTORY)
+        try {
+          localStorage.setItem(HISTORY_KEY, JSON.stringify(next))
+        } catch {
+          // storage unavailable — history just won't persist
+        }
+        return next
+      })
       // Scroll result into view on mobile
       setTimeout(() => document.getElementById('result-card')?.scrollIntoView({ behavior:'smooth', block:'nearest' }), 100)
     } catch (err) {
@@ -336,6 +393,57 @@ export default function PredictionForm() {
 
           {/* ── RESULT PANEL ── */}
           <div id="result-card">
+
+            {/* History toggle */}
+            <div className="flex justify-end mb-3">
+              <button
+                type="button"
+                onClick={() => setShowHistory(v => !v)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white dark:bg-zinc-800 text-harvest-700 dark:text-harvest-300 border border-harvest-200 dark:border-zinc-700 hover:bg-harvest-50 dark:hover:bg-zinc-700 transition-colors shadow-sm"
+              >
+                <Clock size={13} />
+                {t('history_button')}{history.length > 0 ? ` (${history.length})` : ''}
+              </button>
+            </div>
+
+            {/* History panel */}
+            <AnimatePresence>
+              {showHistory && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-4 bg-white dark:bg-zinc-900 rounded-2xl border border-harvest-100 dark:border-zinc-800 shadow-lg overflow-hidden"
+                >
+                  <div className="px-4 pt-3 pb-1">
+                    <h3 className="text-sm font-bold text-harvest-900 dark:text-zinc-100">{t('history_title')}</h3>
+                    <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">{t('history_private_note')}</p>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto px-2 py-1">
+                    {history.length === 0 ? (
+                      <p className="px-3 py-4 text-sm text-gray-400 dark:text-zinc-500">{t('history_empty')}</p>
+                    ) : (
+                      history.map(entry => (
+                        <HistoryItem key={entry.savedAt} entry={entry} onClick={() => loadFromHistory(entry)} />
+                      ))
+                    )}
+                  </div>
+                  {history.length > 0 && (
+                    <div className="px-2 pb-2">
+                      <button
+                        type="button"
+                        onClick={handleClearHistory}
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                      >
+                        <Trash2 size={13} />
+                        {t('history_clear')}
+                      </button>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <AnimatePresence mode="wait">
               {result ? (
                 <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>

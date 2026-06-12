@@ -109,7 +109,6 @@ OPENAPI_SPEC = {
             '— Charlotte Kariza'
         ),
         'version': '1.0.0',
-        'contact': {'email': 'c.kariza@alustudent.com'},
     },
     'servers': [{'url': '/', 'description': 'Current server'}],
     'tags': [

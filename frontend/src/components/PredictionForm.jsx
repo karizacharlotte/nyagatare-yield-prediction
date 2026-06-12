@@ -455,9 +455,6 @@ export default function PredictionForm() {
                 >
                   <div className="px-4 pt-3 pb-1">
                     <h3 className="text-sm font-bold text-harvest-900 dark:text-zinc-100">{t('history_title')}</h3>
-                    {token && (
-                      <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">{t('history_signed_in_note')}</p>
-                    )}
                   </div>
                   <div className="max-h-64 overflow-y-auto px-2 py-1">
                     {!token ? (

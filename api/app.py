@@ -7,7 +7,6 @@ Swagger UI available at /apidocs
 import os
 import re
 import json
-import datetime
 import numpy as np
 import pandas as pd
 import joblib
@@ -346,29 +345,6 @@ OPENAPI_SPEC = {
                 },
             },
         },
-        '/predictions/import': {
-            'post': {
-                'tags': ['Account'],
-                'summary': 'Import locally-saved predictions into a new account',
-                'description': (
-                    'One-time import for a freshly created account. Used to migrate predictions made '
-                    'while offline/anonymous (stored in the browser) into the farmer\'s new account. '
-                    'No-ops if the account already has saved predictions.'
-                ),
-                'security': [{'bearerAuth': []}],
-                'requestBody': {
-                    'required': True,
-                    'content': {'application/json': {'schema': {
-                        'type': 'object',
-                        'properties': {'entries': {'type': 'array', 'items': {'type': 'object'}}},
-                    }}},
-                },
-                'responses': {
-                    '200': {'description': 'Number of entries imported', 'content': {'application/json': {'example': {'imported': 2}}}},
-                    '401': {'description': 'Authentication required'},
-                },
-            }
-        },
     },
 }
 
@@ -527,41 +503,6 @@ def clear_predictions(user):
     db.session.commit()
     return jsonify({'status': 'ok'})
 
-
-@app.route('/predictions/import', methods=['POST'])
-@token_required
-def import_predictions(user):
-    """One-time import of a freshly-created account's local (offline)
-    history, so a farmer who used the app before signing up doesn't lose
-    predictions made while offline/anonymous."""
-    if Prediction.query.filter_by(user_id=user.id).first():
-        return jsonify({'imported': 0})
-
-    data = request.get_json(force=True) or {}
-    entries = data.get('entries', [])
-    if not isinstance(entries, list):
-        return jsonify({'error': 'entries must be a list'}), 400
-
-    imported = 0
-    for entry in entries[:MAX_HISTORY]:
-        crop   = entry.get('crop')
-        result = entry.get('data')
-        if crop not in ('bean', 'rice') or not isinstance(result, dict):
-            continue
-
-        pred = Prediction(user_id=user.id, crop=crop, result=result)
-        try:
-            pred.created_at = datetime.datetime.fromtimestamp(
-                float(entry.get('savedAt')) / 1000, tz=datetime.timezone.utc
-            )
-        except (TypeError, ValueError):
-            pass
-
-        db.session.add(pred)
-        imported += 1
-
-    db.session.commit()
-    return jsonify({'imported': imported})
 
 
 @app.route('/predict', methods=['POST'])

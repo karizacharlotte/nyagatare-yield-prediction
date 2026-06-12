@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { WifiOff, Clock, Trash2, LogIn } from 'lucide-react'
 import { useLang } from '../context/LangContext'
@@ -7,9 +7,6 @@ import NPKToggle from './NPKToggle'
 import YieldResult from './YieldResult'
 import beansImg from '../assets/crops/beans.jpg'
 import riceImg from '../assets/crops/rice.jpg'
-
-const HISTORY_KEY = 'yieldwise_history'
-const MAX_HISTORY = 10
 
 const BEAN_SECTORS   = ['Katabagemu','Rukomo']
 const RICE_SECTORS   = ['Nyagatare','Rukomo','Rwempasha','Tabagwe']
@@ -80,7 +77,7 @@ function FormSelect({ id, value, onChange, children }) {
 
 export default function PredictionForm() {
   const { t, lang } = useLang()
-  const { token, openAuthModal } = useAuth()
+  const { token, authModal, openAuthModal } = useAuth()
 
   const [crop, setCrop]       = useState('bean')
   const [npk, setNpk]         = useState({ N: true, P: true, K: true })
@@ -101,50 +98,51 @@ export default function PredictionForm() {
   const [history, setHistory] = useState([])
   const [showHistory, setShowHistory] = useState(false)
 
-  // Load prediction history: from the farmer's account when signed in
-  // (synced across devices), otherwise from this browser's local storage
-  // (guest/offline mode — never sent to a server, so others never see it).
+  // A prediction the farmer asked for before signing in — run as soon as
+  // they finish creating an account / logging in.
+  const pendingPredictRef = useRef(false)
+
+  // Load the farmer's saved prediction history when signed in (synced
+  // across devices, and cached for offline viewing by the service worker).
+  // If a prediction was waiting on sign-in, run it now instead.
   useEffect(() => {
     setHistory([])
     setResult(null)
     setIsCached(false)
     setCachedAt(null)
 
-    if (token) {
-      fetch('/predictions', { headers: { Authorization: `Bearer ${token}` } })
-        .then(res => (res.ok ? res.json() : { history: [] }))
-        .then(({ history: saved }) => {
-          const entries = (saved || []).map(p => ({ data: p.data, crop: p.crop, savedAt: p.saved_at }))
-          if (entries.length > 0) {
-            setHistory(entries)
-            setResult(entries[0].data)
-            setResultCrop(entries[0].crop)
-            setIsCached(true)
-            setCachedAt(entries[0].savedAt)
-          }
-        })
-        .catch(() => {
-          // offline or request failed — leave the placeholder shown
-        })
+    if (!token) return
+
+    if (pendingPredictRef.current) {
+      pendingPredictRef.current = false
+      runPrediction()
       return
     }
 
-    try {
-      const raw = localStorage.getItem(HISTORY_KEY)
-      if (raw) {
-        const saved = JSON.parse(raw)
-        if (Array.isArray(saved) && saved.length > 0) {
-          setHistory(saved)
-          setResult(saved[0].data)
-          setResultCrop(saved[0].crop)
+    fetch('/predictions', { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => (res.ok ? res.json() : { history: [] }))
+      .then(({ history: saved }) => {
+        const entries = (saved || []).map(p => ({ data: p.data, crop: p.crop, savedAt: p.saved_at }))
+        if (entries.length > 0) {
+          setHistory(entries)
+          setResult(entries[0].data)
+          setResultCrop(entries[0].crop)
           setIsCached(true)
-          setCachedAt(saved[0].savedAt)
+          setCachedAt(entries[0].savedAt)
         }
-      }
-    } catch {
-      // ignore malformed/unavailable storage
-    }
+      })
+      .catch(() => {
+        // offline or request failed — leave the placeholder shown
+      })
   }, [token])
+
+  // If the sign-in modal is dismissed without completing, drop any
+  // prediction that was waiting on it.
+  useEffect(() => {
+    if (authModal === null && !token) {
+      pendingPredictRef.current = false
+    }
+  }, [authModal, token])
 
   // Track connectivity so we can surface an offline indicator
   useEffect(() => {
@@ -183,12 +181,6 @@ export default function PredictionForm() {
   const handleClearHistory = () => {
     if (token) {
       fetch('/predictions', { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }).catch(() => {})
-    } else {
-      try {
-        localStorage.removeItem(HISTORY_KEY)
-      } catch {
-        // ignore
-      }
     }
     setHistory([])
     setResult(null)
@@ -199,8 +191,7 @@ export default function PredictionForm() {
 
   const handleNpk = (key, val) => setNpk(prev => ({ ...prev, [key]: val }))
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const runPrediction = async () => {
     setLoading(true)
     setError('')
 
@@ -219,11 +210,9 @@ export default function PredictionForm() {
     }
 
     try {
-      const headers = { 'Content-Type': 'application/json' }
-      if (token) headers.Authorization = `Bearer ${token}`
-      const res  = await fetch('/predict', {
+      const res = await fetch('/predict', {
         method: 'POST',
-        headers,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload),
       })
       const data = await res.json()
@@ -232,19 +221,16 @@ export default function PredictionForm() {
       setResultCrop(crop)
       setIsCached(false)
       setCachedAt(null)
-      // Signed-in farmers' predictions are already saved server-side by /predict.
-      const entry = { data, crop, savedAt: token ? new Date().toISOString() : Date.now() }
-      setHistory(prev => {
-        const next = [entry, ...prev].slice(0, MAX_HISTORY)
-        if (!token) {
-          try {
-            localStorage.setItem(HISTORY_KEY, JSON.stringify(next))
-          } catch {
-            // storage unavailable — history just won't persist
-          }
-        }
-        return next
-      })
+
+      // /predict already saved this prediction server-side — refresh the
+      // history list so it stays in sync with the account.
+      fetch('/predictions', { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => (res.ok ? res.json() : { history: [] }))
+        .then(({ history: saved }) => {
+          setHistory((saved || []).map(p => ({ data: p.data, crop: p.crop, savedAt: p.saved_at })))
+        })
+        .catch(() => {})
+
       // Scroll result into view on mobile
       setTimeout(() => document.getElementById('result-card')?.scrollIntoView({ behavior:'smooth', block:'nearest' }), 100)
     } catch (err) {
@@ -256,6 +242,16 @@ export default function PredictionForm() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!token) {
+      pendingPredictRef.current = true
+      openAuthModal('signup')
+      return
+    }
+    runPrediction()
   }
 
   const months = t('months')
@@ -423,6 +419,13 @@ export default function PredictionForm() {
                   `🌾 ${t('form_submit')}`
                 )}
               </motion.button>
+
+              {!token && (
+                <p className="flex items-center justify-center gap-1.5 text-center text-xs text-gray-400 dark:text-zinc-500">
+                  <LogIn size={12} />
+                  {t('form_signin_required')}
+                </p>
+              )}
             </form>
           </div>
 
@@ -452,22 +455,24 @@ export default function PredictionForm() {
                 >
                   <div className="px-4 pt-3 pb-1">
                     <h3 className="text-sm font-bold text-harvest-900 dark:text-zinc-100">{t('history_title')}</h3>
-                    <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">
-                      {token ? t('history_signed_in_note') : t('history_private_note')}
-                    </p>
-                    {!token && (
-                      <button
-                        type="button"
-                        onClick={() => openAuthModal('login')}
-                        className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-harvest-600 dark:text-harvest-300 hover:underline"
-                      >
-                        <LogIn size={12} />
-                        {t('history_login_cta')}
-                      </button>
+                    {token && (
+                      <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">{t('history_signed_in_note')}</p>
                     )}
                   </div>
                   <div className="max-h-64 overflow-y-auto px-2 py-1">
-                    {history.length === 0 ? (
+                    {!token ? (
+                      <div className="px-3 py-4 text-center">
+                        <p className="text-sm text-gray-400 dark:text-zinc-500 mb-2">{t('history_login_cta')}</p>
+                        <button
+                          type="button"
+                          onClick={() => openAuthModal('login')}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-harvest-50 dark:bg-zinc-800 text-harvest-700 dark:text-harvest-300 border border-harvest-200 dark:border-zinc-700 hover:bg-harvest-100 dark:hover:bg-zinc-700 transition-colors"
+                        >
+                          <LogIn size={13} />
+                          {t('auth_signin_short')}
+                        </button>
+                      </div>
+                    ) : history.length === 0 ? (
                       <p className="px-3 py-4 text-sm text-gray-400 dark:text-zinc-500">{t('history_empty')}</p>
                     ) : (
                       history.map(entry => (
@@ -475,7 +480,7 @@ export default function PredictionForm() {
                       ))
                     )}
                   </div>
-                  {history.length > 0 && (
+                  {token && history.length > 0 && (
                     <div className="px-2 pb-2">
                       <button
                         type="button"

@@ -46,7 +46,7 @@ A farmer enters their farm conditions — fertiliser applied (N/P/K), sector, pr
 
 The whole interface is bilingual (English ↔ Kinyarwanda), supports light/dark mode, and works offline as an installable PWA.
 
-A farmer can optionally **create an account** (phone number + password) to keep a private prediction history that syncs across devices — predictions made while signed out stay only in that browser's local storage and are never visible to anyone else.
+To see a prediction result, a farmer signs in or **creates a free account** (phone number + password). This keeps their prediction history private, synced across devices, and viewable offline — only the farmer who made a prediction can see it.
 
 ---
 
@@ -150,9 +150,8 @@ npm run build
 | `/auth/me` | GET | Get the current user for a valid `Bearer` token |
 | `/predictions` | GET | List the signed-in farmer's saved predictions (most recent first) |
 | `/predictions` | DELETE | Clear the signed-in farmer's saved prediction history |
-| `/predictions/import` | POST | One-time import of a guest's local history into a new account |
 
-Auth endpoints and `/predictions*` are documented in detail in the Swagger UI (`/apidocs`), including request/response examples and the `bearerAuth` security scheme.
+Signing in (or creating a free account) is required to see a prediction result — this is what lets results sync across devices and stay available offline. Auth endpoints and `/predictions` are documented in detail in the Swagger UI (`/apidocs`), including request/response examples and the `bearerAuth` security scheme.
 
 Example request to `/predict`:
 

@@ -32,15 +32,22 @@ export default defineConfig({
             handler: 'StaleWhileRevalidate',
             options: { cacheName: 'yieldwise-api' },
           },
+          {
+            urlPattern: /\/predictions$/,
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'yieldwise-api' },
+          },
         ],
       },
     }),
   ],
   server: {
     proxy: {
-      '/predict':   'http://localhost:5000',
-      '/health':    'http://localhost:5000',
-      '/model-info': 'http://localhost:5000',
+      '/predict':     'http://localhost:5000',
+      '/health':      'http://localhost:5000',
+      '/model-info':  'http://localhost:5000',
+      '/auth':        'http://localhost:5000',
+      '/predictions': 'http://localhost:5000',
     },
   },
 })

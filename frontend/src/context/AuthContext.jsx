@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 
 const TOKEN_KEY = 'yieldwise_token'
-const HISTORY_KEY = 'yieldwise_history'
+const USER_KEY  = 'yieldwise_user'
 
 const AuthContext = createContext()
 
@@ -16,26 +16,6 @@ async function request(url, body) {
   return data
 }
 
-// Migrate a guest's locally-saved history into a brand new account, so
-// predictions made before signing up aren't lost from view. Runs before the
-// token is committed to state, so the history fetch on the new session
-// already sees the imported entries.
-async function importLocalHistory(token) {
-  try {
-    const raw = localStorage.getItem(HISTORY_KEY)
-    const entries = raw ? JSON.parse(raw) : []
-    if (!Array.isArray(entries) || entries.length === 0) return
-    await fetch('/predictions/import', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ entries }),
-    })
-    localStorage.removeItem(HISTORY_KEY)
-  } catch {
-    // best-effort only — local history simply stays as a guest fallback
-  }
-}
-
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => {
     try {
@@ -44,7 +24,16 @@ export function AuthProvider({ children }) {
       return null
     }
   })
-  const [user, setUser] = useState(null)
+  // Seed from a cached copy so the header still shows the farmer's phone
+  // number (and saved history stays reachable) when offline.
+  const [user, setUser] = useState(() => {
+    try {
+      const raw = localStorage.getItem(USER_KEY)
+      return raw ? JSON.parse(raw) : null
+    } catch {
+      return null
+    }
+  })
   const [authReady, setAuthReady] = useState(false)
   const [authModal, setAuthModal] = useState(null) // null | 'login' | 'signup'
 
@@ -52,38 +41,50 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!token) {
       setUser(null)
+      try { localStorage.removeItem(USER_KEY) } catch { /* ignore */ }
       setAuthReady(true)
       return
     }
     fetch('/auth/me', { headers: { Authorization: `Bearer ${token}` } })
       .then(res => {
-        if (!res.ok) throw new Error('invalid token')
-        return res.json()
+        if (res.ok) {
+          return res.json().then(data => {
+            setUser(data.user)
+            try { localStorage.setItem(USER_KEY, JSON.stringify(data.user)) } catch { /* ignore */ }
+          })
+        }
+        if (res.status === 401) {
+          try {
+            localStorage.removeItem(TOKEN_KEY)
+            localStorage.removeItem(USER_KEY)
+          } catch { /* ignore */ }
+          setToken(null)
+          setUser(null)
+        }
       })
-      .then(data => setUser(data.user))
       .catch(() => {
-        try { localStorage.removeItem(TOKEN_KEY) } catch { /* ignore */ }
-        setToken(null)
-        setUser(null)
+        // Offline — keep the cached token/user so saved history stays visible.
       })
       .finally(() => setAuthReady(true))
   }, [token])
 
   const applyAuth = (data) => {
-    try { localStorage.setItem(TOKEN_KEY, data.token) } catch { /* ignore */ }
+    try {
+      localStorage.setItem(TOKEN_KEY, data.token)
+      localStorage.setItem(USER_KEY, JSON.stringify(data.user))
+    } catch { /* ignore */ }
     setToken(data.token)
     setUser(data.user)
   }
 
-  const signup = async (phone, password) => {
-    const data = await request('/auth/signup', { phone, password })
-    await importLocalHistory(data.token)
-    applyAuth(data)
-  }
-  const login = (phone, password) => request('/auth/login', { phone, password }).then(applyAuth)
+  const signup = (phone, password) => request('/auth/signup', { phone, password }).then(applyAuth)
+  const login  = (phone, password) => request('/auth/login', { phone, password }).then(applyAuth)
 
   const logout = () => {
-    try { localStorage.removeItem(TOKEN_KEY) } catch { /* ignore */ }
+    try {
+      localStorage.removeItem(TOKEN_KEY)
+      localStorage.removeItem(USER_KEY)
+    } catch { /* ignore */ }
     setToken(null)
     setUser(null)
   }

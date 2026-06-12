@@ -106,7 +106,7 @@ OPENAPI_SPEC = {
             'REST API for predicting bean and rice crop yields in Nyagatare District, Rwanda. '
             'Powered by **Random Forest** (beans, R²=0.494) and **Gradient Boosting** (rice, R²=0.674) '
             'models trained on 216 RAB field trial records. '
-            '— Charlotte Kariza · ALU BSc Software Engineering Capstone 2026'
+            '— Charlotte Kariza'
         ),
         'version': '1.0.0',
         'contact': {'email': 'c.kariza@alustudent.com'},

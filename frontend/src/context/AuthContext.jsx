@@ -77,7 +77,7 @@ export function AuthProvider({ children }) {
     setUser(data.user)
   }
 
-  const signup = (phone, password, recoveryWord) => request('/auth/signup', { phone, password, recovery_word: recoveryWord }).then(applyAuth)
+  const signup = (phone, password, recoveryWord, name) => request('/auth/signup', { phone, password, recovery_word: recoveryWord, name }).then(applyAuth)
   const login  = (phone, password) => request('/auth/login', { phone, password }).then(applyAuth)
   const resetPassword = (phone, recoveryWord, newPassword) =>
     request('/auth/reset-password', { phone, recovery_word: recoveryWord, new_password: newPassword }).then(applyAuth)

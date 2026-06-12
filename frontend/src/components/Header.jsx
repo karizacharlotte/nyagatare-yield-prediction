@@ -61,7 +61,7 @@ export default function Header() {
             user ? (
               <div className="hidden sm:flex items-center gap-2">
                 <span className="text-xs font-medium text-harvest-200 dark:text-zinc-300 max-w-[100px] truncate" title={user.phone}>
-                  {user.phone}
+                  {user.name || user.phone}
                 </span>
                 <button
                   onClick={logout}
@@ -157,7 +157,7 @@ export default function Header() {
                   className="flex items-center gap-2 w-full text-left px-3 py-2.5 text-harvest-200 hover:text-white hover:bg-harvest-800/50 dark:hover:bg-zinc-800 rounded-lg text-sm"
                 >
                   <LogOut size={14} />
-                  {t('auth_logout')} · {user.phone}
+                  {t('auth_logout')} · {user.name || user.phone}
                 </button>
               ) : (
                 <button

@@ -12,6 +12,7 @@ class User(db.Model):
 
     id            = db.Column(db.Integer, primary_key=True)
     phone         = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    name          = db.Column(db.String(60), nullable=True)
     password_hash = db.Column(db.String(255), nullable=False)
     recovery_hash = db.Column(db.String(255), nullable=False)
     created_at    = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
@@ -22,7 +23,7 @@ class User(db.Model):
     )
 
     def to_dict(self):
-        return {'id': self.id, 'phone': self.phone}
+        return {'id': self.id, 'phone': self.phone, 'name': self.name}
 
 
 class Prediction(db.Model):

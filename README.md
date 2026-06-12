@@ -145,7 +145,7 @@ npm run build
 | `/model-info` | GET | Cross-validation metrics & feature lists for both models |
 | `/health` | GET | Health check |
 | `/apidocs` | GET | Interactive Swagger UI |
-| `/auth/signup` | POST | Create a farmer account (`phone`, `password`, `recovery_word`) → returns a JWT |
+| `/auth/signup` | POST | Create a farmer account (`phone`, `password`, `recovery_word`, optional `name`) → returns a JWT |
 | `/auth/login` | POST | Log in with `phone` + `password` → returns a JWT |
 | `/auth/reset-password` | POST | Reset a forgotten password using `phone` + `recovery_word` → returns a JWT |
 | `/auth/me` | GET | Get the current user for a valid `Bearer` token |

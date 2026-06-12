@@ -267,16 +267,17 @@ OPENAPI_SPEC = {
                             'required': ['phone', 'password', 'recovery_word'],
                             'properties': {
                                 'phone':         {'type': 'string', 'description': '8-15 digit phone number'},
+                                'name':          {'type': 'string', 'description': 'Optional display name, shown instead of the phone number in the app'},
                                 'password':      {'type': 'string', 'format': 'password', 'description': 'At least 6 characters'},
                                 'recovery_word': {'type': 'string', 'description': 'At least 3 characters — used to reset your password if forgotten'},
                             },
                         },
-                        'example': {'phone': '0788123456', 'password': 'secret123', 'recovery_word': 'sunflower'},
+                        'example': {'phone': '0788123456', 'name': 'Jean Mukiza', 'password': 'secret123', 'recovery_word': 'sunflower'},
                     }},
                 },
                 'responses': {
                     '201': {'description': 'Account created', 'content': {'application/json': {'example': {
-                        'token': '<jwt>', 'user': {'id': 1, 'phone': '0788123456'}
+                        'token': '<jwt>', 'user': {'id': 1, 'phone': '0788123456', 'name': 'Jean Mukiza'}
                     }}}},
                     '400': {'description': 'Invalid phone, password, or recovery word'},
                     '409': {'description': 'Phone number already registered'},
@@ -303,7 +304,7 @@ OPENAPI_SPEC = {
                 },
                 'responses': {
                     '200': {'description': 'Login successful', 'content': {'application/json': {'example': {
-                        'token': '<jwt>', 'user': {'id': 1, 'phone': '0788123456'}
+                        'token': '<jwt>', 'user': {'id': 1, 'phone': '0788123456', 'name': 'Jean Mukiza'}
                     }}}},
                     '401': {'description': 'Invalid phone number or password'},
                 },
@@ -331,7 +332,7 @@ OPENAPI_SPEC = {
                 },
                 'responses': {
                     '200': {'description': 'Password reset', 'content': {'application/json': {'example': {
-                        'token': '<jwt>', 'user': {'id': 1, 'phone': '0788123456'}
+                        'token': '<jwt>', 'user': {'id': 1, 'phone': '0788123456', 'name': 'Jean Mukiza'}
                     }}}},
                     '400': {'description': 'New password too short'},
                     '401': {'description': 'Phone number or recovery word is incorrect'},
@@ -345,7 +346,7 @@ OPENAPI_SPEC = {
                 'security': [{'bearerAuth': []}],
                 'responses': {
                     '200': {'description': 'Current user', 'content': {'application/json': {'example': {
-                        'user': {'id': 1, 'phone': '0788123456'}
+                        'user': {'id': 1, 'phone': '0788123456', 'name': 'Jean Mukiza'}
                     }}}},
                     '401': {'description': 'Authentication required'},
                 },
@@ -478,6 +479,7 @@ def model_info():
 def signup():
     data = request.get_json(force=True) or {}
     phone         = str(data.get('phone', '')).strip().replace(' ', '')
+    name          = str(data.get('name', '')).strip()
     password      = str(data.get('password', ''))
     recovery_word = str(data.get('recovery_word', '')).strip()
 
@@ -492,6 +494,7 @@ def signup():
 
     user = User(
         phone=phone,
+        name=name or None,
         password_hash=generate_password_hash(password),
         recovery_hash=generate_password_hash(recovery_word.lower()),
     )

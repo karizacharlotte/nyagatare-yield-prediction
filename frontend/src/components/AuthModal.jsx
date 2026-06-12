@@ -9,6 +9,7 @@ export default function AuthModal() {
   const { authModal, closeAuthModal, login, signup, resetPassword } = useAuth()
   const [mode, setMode] = useState('login')
   const [phone, setPhone] = useState('')
+  const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [recoveryWord, setRecoveryWord] = useState('')
   const [error, setError] = useState('')
@@ -18,6 +19,7 @@ export default function AuthModal() {
     if (authModal) {
       setMode(authModal)
       setPhone('')
+      setName('')
       setPassword('')
       setRecoveryWord('')
       setError('')
@@ -28,6 +30,7 @@ export default function AuthModal() {
 
   const switchMode = (newMode) => {
     setMode(newMode)
+    setName('')
     setPassword('')
     setRecoveryWord('')
     setError('')
@@ -39,7 +42,7 @@ export default function AuthModal() {
     setLoading(true)
     try {
       if (mode === 'signup') {
-        await signup(phone, password, recoveryWord)
+        await signup(phone, password, recoveryWord, name)
       } else if (mode === 'reset') {
         await resetPassword(phone, recoveryWord, password)
       } else {
@@ -83,6 +86,21 @@ export default function AuthModal() {
           </p>
 
           <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+            {mode === 'signup' && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-zinc-100 mb-1.5">
+                  {t('auth_name')}
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder={t('auth_name_placeholder')}
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm bg-white dark:bg-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-harvest-400 focus:border-harvest-400 transition-all"
+                />
+                <p className="mt-1 text-xs text-gray-400 dark:text-zinc-500">{t('auth_name_hint')}</p>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-zinc-100 mb-1.5">
                 {t('auth_phone')}

@@ -1,13 +1,38 @@
 # YieldWise — Nyagatare Crop Yield Prediction
 
-Machine learning yield forecasting for **bean and rice farmers** in Nyagatare District, Rwanda. YieldWise predicts expected crop yield (tonnes/hectare) from fertiliser use, location, planting timing, and seasonal climate — and turns that prediction into plain-language farming advice, in **English and Kinyarwanda**.
+Machine learning web app that predicts **bean and rice** yields (t/ha) for farmers in Nyagatare District, Rwanda, from fertiliser use, location, planting timing, and seasonal climate — and returns plain-language farming advice in **English and Kinyarwanda**.
 
-**Live app & API:** [nyagatare-yield-prediction.onrender.com](https://nyagatare-yield-prediction.onrender.com)
-**API docs (Swagger UI):** [/apidocs](https://nyagatare-yield-prediction.onrender.com/apidocs)
+- **GitHub repo:** https://github.com/karizacharlotte/nyagatare-yield-prediction
+- **Live app & API:** https://nyagatare-yield-prediction.onrender.com
+- **API docs (Swagger UI):** https://nyagatare-yield-prediction.onrender.com/apidocs
 
 > Note: the live service is on Render's free tier and may take 30–60s to wake up after inactivity.
 
-![YieldWise hero screenshot](notebooks/images/webapp_hero.jpg)
+---
+
+## App screenshots
+
+**Home**
+
+![YieldWise home page](notebooks/images/webapp_hero.jpg)
+
+**Prediction form**
+
+![Yield prediction form](notebooks/images/webapp_predict.jpg)
+
+**About / model performance**
+
+![About page with model performance](notebooks/images/webapp_about.jpg)
+
+**API documentation (Swagger UI)**
+
+![Swagger UI API documentation](notebooks/images/webapp_swagger.png)
+
+---
+
+## Video demo
+
+[Add demo video link here]
 
 ---
 
@@ -35,7 +60,7 @@ The whole interface is bilingual (English ↔ Kinyarwanda) and supports light/da
 
 ---
 
-## Model performance
+## Model architecture & performance
 
 Trained on **216 RAB field trial records** from Nyagatare District (5-fold cross-validation):
 
@@ -44,11 +69,14 @@ Trained on **216 RAB field trial records** from Nyagatare District (5-fold cross
 | Beans | Random Forest | 0.494 | 0.316 | 0.262 | 96 |
 | Rice | Gradient Boosting | 0.674 | 0.848 | 0.629 | 120 |
 
-See [`notebooks/02_model_training.ipynb`](notebooks/02_model_training.ipynb) for the full EDA, model architecture, hyperparameter search, and performance discussion.
+Full data visualisation, feature engineering, model architecture, hyperparameter search, and performance evaluation are in the notebooks:
+
+- [`notebooks/01_data_preprocessing.ipynb`](notebooks/01_data_preprocessing.ipynb) — data cleaning, EDA, feature engineering
+- [`notebooks/02_model_training.ipynb`](notebooks/02_model_training.ipynb) — model training, cross-validation, evaluation plots, deployment overview
 
 ---
 
-## Project structure
+## Project structure (code files)
 
 ```
 nyagatare_yield_project/
@@ -72,7 +100,7 @@ nyagatare_yield_project/
 
 ---
 
-## Running locally
+## Setup instructions (running locally)
 
 ### Backend (Flask API)
 
@@ -125,6 +153,19 @@ Example request to `/predict`:
   "mean_temp_C": 28.1
 }
 ```
+
+---
+
+## Deployment plan
+
+The app is deployed as a single Render **Blueprint** service, defined in [`render.yaml`](render.yaml):
+
+- **Build:** `pip install -r requirements.txt` (also builds and bundles the React frontend into `frontend/dist/`, which Flask serves at `/`)
+- **Run:** `gunicorn api.app:app --bind 0.0.0.0:$PORT --workers 2`
+- **Plan:** Free tier, Python 3.11
+- **Trigger:** auto-deploys on every push to `main` on GitHub
+
+Flask serves both the REST API (`/predict`, `/model-info`, `/health`, `/apidocs`) and the built frontend (`/`) from one service, so the whole app runs from a single URL.
 
 ---
 

@@ -2,6 +2,7 @@ services:
   - type: web
     name: nyagatare-yield-api
     runtime: python
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn api.app:app --bind 0.0.0.0:$PORT --workers 2
     envVars:

@@ -98,9 +98,9 @@ function GaugeBar({ low, predicted, high, crop }) {
   )
 }
 
-function ConfidenceBadge({ r2 }) {
+function ConfidenceBadge({ confidence }) {
   const { t } = useLang()
-  const level = r2 >= 0.65 ? 'high' : r2 >= 0.5 ? 'medium' : 'low'
+  const level = confidence >= 0.65 ? 'high' : confidence >= 0.5 ? 'medium' : 'low'
   const styles = {
     high:   'bg-harvest-100 dark:bg-harvest-900 text-harvest-800 dark:text-harvest-200 border-harvest-300 dark:border-harvest-700',
     medium: 'bg-gold-100 dark:bg-gold-900/30 text-gold-800 dark:text-gold-300 border-gold-300 dark:border-gold-700/60',
@@ -118,7 +118,8 @@ function ConfidenceBadge({ r2 }) {
 export default function YieldResult({ data, crop }) {
   const { t } = useLang()
   const { predicted_yield_t_ha: pred, low_estimate_t_ha: low,
-          high_estimate_t_ha: high, model_r2: r2, model_rmse: rmse, advice = [] } = data
+          high_estimate_t_ha: high, model_r2: r2, model_rmse: rmse,
+          prediction_confidence: confidence = r2, advice = [] } = data
 
   const avg = NATIONAL_AVG[crop] ?? 5
   const vsNat = ((pred - avg) / avg * 100).toFixed(0)
@@ -129,7 +130,7 @@ export default function YieldResult({ data, crop }) {
                   : pred >= avg * 0.85 ? t('result_avg')
                   : t('result_low')
 
-  const isHighConfidence = r2 >= 0.65
+  const isHighConfidence = confidence >= 0.65
 
   const NUTRIENT_LABELS = { N: t('nutrient_n'), P: t('nutrient_p'), K: t('nutrient_k') }
 
@@ -198,7 +199,7 @@ export default function YieldResult({ data, crop }) {
           {[
             { label: t('result_r2'),  value: r2,          suffix: '' },
             { label: t('result_rmse'), value: `±${rmse}`,  suffix: ' t/ha' },
-            { label: t('result_confidence'), component: <ConfidenceBadge r2={r2} /> },
+            { label: t('result_confidence'), component: <ConfidenceBadge confidence={confidence} /> },
           ].map(({ label, value, suffix, component }) => (
             <div key={label} className="bg-harvest-50 dark:bg-zinc-800/60 rounded-2xl p-3 text-center border border-harvest-100 dark:border-zinc-700">
               <p className="text-gray-500 dark:text-zinc-500 text-xs mb-1">{label}</p>

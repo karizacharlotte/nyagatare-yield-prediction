@@ -74,7 +74,34 @@ ADVICE_RANGES = {
 }
 
 
-def generate_advice(crop, data, prediction, r2):
+def compute_confidence(crop, data, r2):
+    """Adjust the model's overall cross-validated R² for this specific
+    prediction based on how typical the farmer's inputs are. Rainfall,
+    temperature and growing season within the agronomic ranges seen during
+    training (plus full NPK fertiliser) raise confidence; values outside
+    those ranges are extrapolation, so confidence drops."""
+    rng = ADVICE_RANGES[crop]
+    score = 0
+
+    rainfall = float(data.get('total_rainfall_mm', 0))
+    rmin, rmax = rng['rainfall']
+    score += 1 if rmin <= rainfall <= rmax else -1
+
+    temp = float(data.get('mean_temp_C', 0))
+    tmin, tmax = rng['temp']
+    score += 1 if tmin <= temp <= tmax else -1
+
+    days = float(data.get('growing_days', 0))
+    dmin, dmax = rng['growing_days']
+    score += 1 if dmin <= days <= dmax else -1
+
+    fert_count = sum(int(data.get(f'has_{n}', 0)) for n in ('N', 'P', 'K'))
+    score += (fert_count - 1.5) / 1.5
+
+    return round(max(0.0, min(1.0, r2 + (score / 4) * 0.2)), 3)
+
+
+def generate_advice(crop, data, prediction, confidence):
     """Return a list of {code, params} tips describing how the farmer's
     inputs compare to agronomic norms. Codes map to translated message
     templates on the frontend (see LangContext tip_* keys)."""
@@ -117,7 +144,7 @@ def generate_advice(crop, data, prediction, r2):
     elif prediction < avg * 0.85:
         tips.append({'code': 'yield_below_avg', 'params': {}})
 
-    if r2 < 0.65:
+    if confidence < 0.65:
         tips.append({'code': 'confidence_low', 'params': {}})
 
     return tips
@@ -238,6 +265,7 @@ OPENAPI_SPEC = {
                             'high_estimate_t_ha': 2.94,
                             'model_r2': 0.494,
                             'model_rmse': 0.316,
+                            'prediction_confidence': 0.694,
                             'advice': [
                                 {'code': 'fertiliser_full', 'params': {}},
                                 {'code': 'yield_above_avg', 'params': {}},
@@ -601,16 +629,18 @@ def predict():
 
     prediction = float(model.predict(X)[0])
     rmse       = meta['cv_rmse']
+    confidence = compute_confidence(crop, data, meta['cv_r2'])
 
     result = {
-        'crop':                 crop,
-        'predicted_yield_t_ha': round(prediction, 3),
-        'low_estimate_t_ha':    round(max(0.0, prediction - rmse), 3),
-        'high_estimate_t_ha':   round(prediction + rmse, 3),
-        'model_r2':             meta['cv_r2'],
-        'model_rmse':           rmse,
-        'advice':               generate_advice(crop, data, prediction, meta['cv_r2']),
-        'inputs_received':      data,
+        'crop':                  crop,
+        'predicted_yield_t_ha':  round(prediction, 3),
+        'low_estimate_t_ha':     round(max(0.0, prediction - rmse), 3),
+        'high_estimate_t_ha':    round(prediction + rmse, 3),
+        'model_r2':              meta['cv_r2'],
+        'model_rmse':            rmse,
+        'prediction_confidence': confidence,
+        'advice':                generate_advice(crop, data, prediction, confidence),
+        'inputs_received':       data,
     }
 
     # Signed-in farmers get their prediction saved to their account,

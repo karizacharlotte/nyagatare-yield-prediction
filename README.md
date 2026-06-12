@@ -2,8 +2,8 @@
 
 Machine learning yield forecasting for **bean and rice farmers** in Nyagatare District, Rwanda. YieldWise predicts expected crop yield (tonnes/hectare) from fertiliser use, location, planting timing, and seasonal climate — and turns that prediction into plain-language farming advice, in **English and Kinyarwanda**.
 
-**Live app & API:** [nyagatare-yield-api.onrender.com](https://nyagatare-yield-api.onrender.com)
-**API docs (Swagger UI):** [/apidocs](https://nyagatare-yield-api.onrender.com/apidocs)
+**Live app & API:** [nyagatare-yield-prediction.onrender.com](https://nyagatare-yield-prediction.onrender.com)
+**API docs (Swagger UI):** [/apidocs](https://nyagatare-yield-prediction.onrender.com/apidocs)
 
 > Note: the live service is on Render's free tier and may take 30–60s to wake up after inactivity.
 

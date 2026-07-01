@@ -7,7 +7,6 @@ Swagger UI available at /apidocs
 import os
 import re
 import json
-import secrets
 import numpy as np
 import pandas as pd
 import joblib
@@ -572,21 +571,6 @@ def me():
     if user is None:
         return jsonify({'error': 'Authentication required'}), 401
     return jsonify({'user': user.to_dict()})
-
-
-# ── Temporary: one-off reset of all accounts/history ────────────────────────
-# TODO: remove this endpoint after use.
-ADMIN_WIPE_SECRET = 'Z8U7cclRHJ0u2-EjtCgCmvQenpUBkGpAMgfTpwMH39Q'
-
-@app.route('/admin/wipe', methods=['POST'])
-def admin_wipe():
-    secret = request.headers.get('X-Admin-Secret', '')
-    if not secrets.compare_digest(secret, ADMIN_WIPE_SECRET):
-        return jsonify({'error': 'Forbidden'}), 403
-    pred_count = Prediction.query.delete()
-    user_count = User.query.delete()
-    db.session.commit()
-    return jsonify({'deleted_predictions': pred_count, 'deleted_users': user_count})
 
 
 # ── Prediction history ───────────────────────────────────────────────────────

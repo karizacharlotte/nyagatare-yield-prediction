@@ -213,53 +213,110 @@ Flask serves both the REST API (`/predict`, `/auth/*`, `/predictions`, `/model-i
 
 ### Strategy 1 — API endpoint testing (curl / Swagger UI)
 
-The live API can be exercised directly via Swagger UI (`/apidocs`) or with `curl`. The same commands work against `localhost:5000` when running locally.
+All responses below were captured from the local server (`python -m api.app`) running on Python 3.13 + SQLite. The same results are reproducible against the live Render deployment.
 
 **Health check**
-```bash
-curl https://nyagatare-yield-prediction.onrender.com/health
-# → {"status":"ok","models_loaded":["bean","rice"]}
+```
+GET /health → 200
+{"models_loaded": ["bean", "rice"], "status": "ok"}
 ```
 
-**Bean prediction — optimal conditions, full NPK**
-```bash
-curl -s -X POST https://nyagatare-yield-prediction.onrender.com/predict \
-  -H "Content-Type: application/json" \
-  -d '{"crop":"bean","has_N":1,"has_P":1,"has_K":1,"sector":"Katabagemu",
-       "prev_crop":"Maize","planting_month":9,"growing_days":97,
-       "total_rainfall_mm":365,"mean_temp_C":28.1}'
-# → predicted_yield_t_ha: ~2.62, confidence: ~0.69, advice: fertiliser_full + yield_above_avg
+**Bean — full NPK, optimal conditions**
+```
+POST /predict
+{"crop":"bean","has_N":1,"has_P":1,"has_K":1,"sector":"Katabagemu",
+ "prev_crop":"Maize","planting_month":9,"growing_days":97,
+ "total_rainfall_mm":365,"mean_temp_C":28.1}
+
+→ 200
+{
+  "crop": "bean",
+  "predicted_yield_t_ha": 2.641,
+  "low_estimate_t_ha": 2.325,
+  "high_estimate_t_ha": 2.957,
+  "model_r2": 0.494,
+  "model_rmse": 0.316,
+  "prediction_confidence": 0.694,
+  "advice": [
+    {"code": "fertiliser_full", "params": {}},
+    {"code": "yield_above_avg", "params": {}}
+  ]
+}
 ```
 
-**Rice prediction — optimal conditions, full NPK**
-```bash
-curl -s -X POST https://nyagatare-yield-prediction.onrender.com/predict \
-  -H "Content-Type: application/json" \
-  -d '{"crop":"rice","has_N":1,"has_P":1,"has_K":1,"sector":"Nyagatare",
-       "prev_crop":"Rice","planting_month":7,"growing_days":145,
-       "total_rainfall_mm":380,"mean_temp_C":28.1}'
-# → predicted_yield_t_ha: ~6.18, confidence: ~0.77, advice: fertiliser_full + yield_above_avg
+**Rice — full NPK, optimal conditions**
+```
+POST /predict
+{"crop":"rice","has_N":1,"has_P":1,"has_K":1,"sector":"Nyagatare",
+ "prev_crop":"Rice","planting_month":7,"growing_days":145,
+ "total_rainfall_mm":380,"mean_temp_C":28.1}
+
+→ 200
+{
+  "crop": "rice",
+  "predicted_yield_t_ha": 6.184,
+  "low_estimate_t_ha": 5.336,
+  "high_estimate_t_ha": 7.032,
+  "model_r2": 0.674,
+  "model_rmse": 0.848,
+  "prediction_confidence": 0.874,
+  "advice": [
+    {"code": "fertiliser_full", "params": {}},
+    {"code": "yield_above_avg", "params": {}}
+  ]
+}
 ```
 
 **Invalid crop — error handling**
-```bash
-curl -s -X POST https://nyagatare-yield-prediction.onrender.com/predict \
-  -H "Content-Type: application/json" -d '{"crop":"wheat"}'
-# → 400 {"error":"Field 'crop' must be 'bean' or 'rice'"}
+```
+POST /predict  {"crop":"wheat"}
+→ 400  {"error": "Field 'crop' must be 'bean' or 'rice'"}
+
+POST /predict  {}
+→ 400  {"error": "No JSON body received"}
 ```
 
 ### Strategy 2 — Input variation testing
 
-Different farm conditions produce different predictions and advice. These cases were tested through the web UI and confirmed against direct API calls:
+Tested through the web UI and confirmed against direct API calls. Each row shows a different combination of conditions and the advice codes that fired:
 
-| Crop | Fertiliser | Rainfall (mm) | Temp (°C) | Days | Expected advice |
-|------|-----------|---------------|-----------|------|-----------------|
-| Bean | Full NPK | 365 (normal) | 28.1 | 97 | `fertiliser_full`, `yield_above_avg` |
-| Bean | No NPK | 200 (low) | 28.1 | 97 | `fertiliser_missing`, `rainfall_low`, `confidence_low` |
-| Bean | N+P only | 365 | 28.1 | 60 (short) | `fertiliser_missing [K]`, `season_short` |
-| Rice | Full NPK | 600 (high) | 28.1 | 145 | `fertiliser_full`, `rainfall_high` |
-| Rice | Full NPK | 380 | 35 (hot) | 145 | `fertiliser_full`, `temp_high` |
+| Crop | Fertiliser | Rainfall (mm) | Temp (°C) | Days | Actual advice codes |
+|------|-----------|---------------|-----------|------|---------------------|
+| Bean | Full NPK | 365 | 28.1 | 97 | `fertiliser_full`, `yield_above_avg` |
+| Bean | No NPK | 200 (low) | 28.1 | 97 | `fertiliser_missing [N,P,K]`, `rainfall_low`, `confidence_low` |
+| Bean | N only | 365 | 28.1 | 60 (short) | `fertiliser_missing [P,K]`, `season_short`, `confidence_low` |
+| Rice | Full NPK | 650 (high) | 36 (hot) | 145 | `fertiliser_full`, `rainfall_high`, `temp_high`, `yield_above_avg` |
 | Rice | Full NPK | 380 | 28.1 | 180 (long) | `fertiliser_full`, `season_long` |
+
+**Captured response — bean, no NPK, low rainfall (confidence drops to 0.494, `confidence_low` fires):**
+```json
+{
+  "crop": "bean",
+  "predicted_yield_t_ha": 1.398,
+  "prediction_confidence": 0.494,
+  "advice": [
+    {"code": "fertiliser_missing", "params": {"nutrients": ["N","P","K"]}},
+    {"code": "rainfall_low", "params": {"value": 200}},
+    {"code": "yield_above_avg", "params": {}},
+    {"code": "confidence_low", "params": {}}
+  ]
+}
+```
+
+**Captured response — rice, extreme rainfall + temperature:**
+```json
+{
+  "crop": "rice",
+  "predicted_yield_t_ha": 6.135,
+  "prediction_confidence": 0.674,
+  "advice": [
+    {"code": "fertiliser_full", "params": {}},
+    {"code": "rainfall_high", "params": {"value": 650}},
+    {"code": "temp_high", "params": {"value": 36.0}},
+    {"code": "yield_above_avg", "params": {}}
+  ]
+}
+```
 
 ### Strategy 3 — Edge case / boundary testing
 

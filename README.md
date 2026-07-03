@@ -161,7 +161,7 @@ The app is deployed as a Render **Blueprint**, defined in [`render.yaml`](render
 
 Flask serves both the REST API (`/predict`, `/auth/*`, `/predictions`, `/model-info`, `/health`, `/apidocs`) and the built frontend (`/`) from one service, so the whole app runs from a single URL.
 
-> Note: Render's free PostgreSQL plan expires after 30 days. For a long-lived demo, either upgrade the database plan or recreate it before it expires — accounts and prediction history are stored there, so the app falls back to read-only/guest behaviour if the database becomes unreachable.
+> Note: Render's free PostgreSQL plan expires after 30 days — upgrade or recreate it before then, or the app falls back to guest-only mode once the database is unreachable.
 
 ---
 
@@ -175,52 +175,6 @@ All responses below were captured from the local server (`python -m api.app`) ru
 ```
 GET /health → 200
 {"models_loaded": ["bean", "rice"], "status": "ok"}
-```
-
-**Bean — full NPK, optimal conditions**
-```
-POST /predict
-{"crop":"bean","has_N":1,"has_P":1,"has_K":1,"sector":"Katabagemu",
- "prev_crop":"Maize","planting_month":9,"growing_days":97,
- "total_rainfall_mm":365,"mean_temp_C":28.1}
-
-→ 200
-{
-  "crop": "bean",
-  "predicted_yield_t_ha": 2.641,
-  "low_estimate_t_ha": 2.325,
-  "high_estimate_t_ha": 2.957,
-  "model_r2": 0.494,
-  "model_rmse": 0.316,
-  "prediction_confidence": 0.694,
-  "advice": [
-    {"code": "fertiliser_full", "params": {}},
-    {"code": "yield_above_avg", "params": {}}
-  ]
-}
-```
-
-**Rice — full NPK, optimal conditions**
-```
-POST /predict
-{"crop":"rice","has_N":1,"has_P":1,"has_K":1,"sector":"Nyagatare",
- "prev_crop":"Rice","planting_month":7,"growing_days":145,
- "total_rainfall_mm":380,"mean_temp_C":28.1}
-
-→ 200
-{
-  "crop": "rice",
-  "predicted_yield_t_ha": 6.184,
-  "low_estimate_t_ha": 5.336,
-  "high_estimate_t_ha": 7.032,
-  "model_r2": 0.674,
-  "model_rmse": 0.848,
-  "prediction_confidence": 0.874,
-  "advice": [
-    {"code": "fertiliser_full", "params": {}},
-    {"code": "yield_above_avg", "params": {}}
-  ]
-}
 ```
 
 **Invalid crop — error handling**
@@ -321,11 +275,11 @@ The capstone proposal targeted a web tool that predicts bean and rice yields for
 
 ### Model performance discussion
 
-The rice Gradient Boosting model (R²=0.674) explains significantly more variance than the bean Random Forest (R²=0.494). This is consistent with the training data: rice trials (120 records) had more systematic variation tied to fertiliser treatment and season, giving the model clearer signal. Bean yield variance is harder to explain — the dataset's 96 bean records span fewer sector/season combinations, and soil quality differences between plots are not captured in the features.
+Rice (Gradient Boosting, R²=0.674) explains more variance than beans (Random Forest, R²=0.494) — rice's 120 training records had more systematic variation tied to fertiliser and season, giving a clearer signal, while beans' 96 records span fewer sector/season combinations and don't capture soil quality differences between plots.
 
-The RMSE for rice (0.848 t/ha) is higher in absolute terms than for beans (0.316 t/ha) because rice yields themselves range much more widely (≈3–10 t/ha vs ≈0.5–3 t/ha). The confidence score system accounts for this — it signals to farmers when their inputs fall outside the range the model was trained on, so they know the prediction is extrapolation.
+Rice's RMSE (0.848 t/ha) is higher in absolute terms than beans' (0.316 t/ha) simply because rice yields range more widely (≈3–10 t/ha vs ≈0.5–3 t/ha). The confidence score accounts for this, flagging when a farmer's inputs fall outside the training range so they know the prediction is extrapolation.
 
-Feature importance analysis (from `models/feature_importance.png`) confirmed that fertiliser use (N, P, K) and growing season length are the strongest predictors for both crops, followed by rainfall and temperature. Sector (location) matters less, reflecting that the field trial plots are all within Nyagatare District and share broadly similar soil conditions.
+Feature importance (`models/feature_importance.png`) confirmed fertiliser use (N, P, K) and season length as the strongest predictors for both crops, followed by rainfall and temperature — sector matters less, since all trial plots share broadly similar soils within Nyagatare District.
 
 ### What could be improved
 

@@ -4,12 +4,10 @@ Machine learning web app that predicts **bean and rice** yields (t/ha) for farme
 
 - **GitHub repo:** https://github.com/karizacharlotte/nyagatare-yield-prediction
 - **Live app & API:** https://nyagatare-yield-prediction.onrender.com
-- **Demo Video** https://youtu.be/rj66UUPXqWk
+- **Demo Video** https://drive.google.com/file/d/1M6h_kg5z2hKAbfzsm3axgG_KvsSvDp0w/view?usp=sharing
 - **API docs (Swagger UI):** https://nyagatare-yield-prediction.onrender.com/apidocs
 
-> Note: the live service is on Render's free tier and may take 30–60s to wake up after inactivity.
 
----
 
 ## App screenshots
 
@@ -37,7 +35,7 @@ Machine learning web app that predicts **bean and rice** yields (t/ha) for farme
 
 ## Video demo
 
-[5-minute demo](https://youtu.be/rj66UUPXqWk)
+[5-minute demo](https://drive.google.com/file/d/1M6h_kg5z2hKAbfzsm3axgG_KvsSvDp0w/view?usp=sharing)
 
 ---
 

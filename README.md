@@ -37,7 +37,7 @@ Machine learning web app that predicts **bean and rice** yields (t/ha) for farme
 
 ## Video demo
 
-[5-minute demo — add link after recording]
+[5-minute demo](https://youtu.be/rj66UUPXqWk)
 
 ---
 

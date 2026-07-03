@@ -161,8 +161,6 @@ The app is deployed as a Render **Blueprint**, defined in [`render.yaml`](render
 
 Flask serves both the REST API (`/predict`, `/auth/*`, `/predictions`, `/model-info`, `/health`, `/apidocs`) and the built frontend (`/`) from one service, so the whole app runs from a single URL.
 
-> Note: Render's free PostgreSQL plan expires after 30 days — upgrade or recreate it before then, or the app falls back to guest-only mode once the database is unreachable.
-
 ---
 
 ## Testing

@@ -184,6 +184,16 @@ POST /predict  {}
 → 400  {"error": "No JSON body received"}
 ```
 
+Live Swagger UI (`/apidocs`) test runs against the deployed API:
+
+**Bean prediction — 200 success** (`predicted_yield_t_ha: 2.62`, `prediction_confidence: 0.694`)
+
+![Swagger UI /predict success response](notebooks/images/apidocs_predict_success.png)
+
+**Invalid crop — 400 error** (`"crop":"maize"` rejected, matches error-handling case above)
+
+![Swagger UI /predict error response](notebooks/images/apidocs_predict_error.png)
+
 ### Strategy 2 — Input variation testing
 
 Tested through the web UI and confirmed against direct API calls. Each row shows a different combination of conditions and the advice codes that fired:

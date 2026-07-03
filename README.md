@@ -7,8 +7,6 @@ Machine learning web app that predicts **bean and rice** yields (t/ha) for farme
 - **Demo Video** https://drive.google.com/file/d/1M6h_kg5z2hKAbfzsm3axgG_KvsSvDp0w/view?usp=sharing
 - **API docs (Swagger UI):** https://nyagatare-yield-prediction.onrender.com/apidocs
 
-
-
 ## App screenshots
 
 **Home**
@@ -30,12 +28,6 @@ Machine learning web app that predicts **bean and rice** yields (t/ha) for farme
 **API documentation (Swagger UI)**
 
 ![Swagger UI API documentation](notebooks/images/webapp_swagger.png)
-
----
-
-## Video demo
-
-[5-minute demo](https://drive.google.com/file/d/1M6h_kg5z2hKAbfzsm3axgG_KvsSvDp0w/view?usp=sharing)
 
 ---
 
@@ -156,41 +148,7 @@ npm run build
 | `/predictions` | GET | List the signed-in farmer's saved predictions (most recent first) |
 | `/predictions` | DELETE | Clear the signed-in farmer's saved prediction history |
 
-Signing in (or creating a free account) is required to see a prediction result — this is what lets results sync across devices and stay available offline. Auth endpoints and `/predictions` are documented in detail in the Swagger UI (`/apidocs`), including request/response examples and the `bearerAuth` security scheme.
-
-Example request to `/predict`:
-
-```json
-{
-  "crop": "bean",
-  "has_N": 1, "has_P": 1, "has_K": 1,
-  "sector": "Katabagemu",
-  "prev_crop": "Maize",
-  "planting_month": 9,
-  "growing_days": 97,
-  "total_rainfall_mm": 365.0,
-  "mean_temp_C": 28.1
-}
-```
-
-Example response:
-
-```json
-{
-  "crop": "bean",
-  "predicted_yield_t_ha": 2.62,
-  "low_estimate_t_ha": 2.30,
-  "high_estimate_t_ha": 2.94,
-  "model_r2": 0.494,
-  "model_rmse": 0.316,
-  "prediction_confidence": 0.694,
-  "advice": [
-    { "code": "fertiliser_full", "params": {} },
-    { "code": "yield_above_avg", "params": {} }
-  ],
-  "inputs_received": { "...": "..." }
-}
-```
+Signing in (or creating a free account) is required to see a prediction result — this is what lets results sync across devices and stay available offline. Auth endpoints and `/predictions` are documented in detail in the Swagger UI (`/apidocs`), including request/response examples and the `bearerAuth` security scheme. See the "Testing" section below for a sample `/predict` request and response.
 
 ---
 

@@ -3,9 +3,9 @@
 Machine learning web app that predicts **bean and rice** yields (t/ha) for farmers in Nyagatare District, Rwanda, from fertiliser use, location, planting timing, and seasonal climate — and returns plain-language farming advice in **English and Kinyarwanda**.
 
 - **GitHub repo:** https://github.com/karizacharlotte/nyagatare-yield-prediction
-- **Live app & API:** https://nyagatare-yield-prediction.onrender.com
+- **Live app & API:** https://nyagatare-yield-api.onrender.com
 - **Demo Video** https://drive.google.com/file/d/1M6h_kg5z2hKAbfzsm3axgG_KvsSvDp0w/view?usp=sharing
-- **API docs (Swagger UI):** https://nyagatare-yield-prediction.onrender.com/apidocs
+- **API docs (Swagger UI):** https://nyagatare-yield-api.onrender.com/apidocs
 
 ## App screenshots
 
@@ -317,7 +317,7 @@ The capstone proposal targeted a web tool that predicts bean and rice yields for
 | Predict rice yield from farm inputs | Achieved — Gradient Boosting, R²=0.674, RMSE=0.848 t/ha |
 | Return bilingual farming advice | Achieved — English and Kinyarwanda |
 | Farmer authentication and prediction history | Achieved — JWT auth, PostgreSQL-backed history |
-| Deployed, publicly accessible app | Achieved — live at nyagatare-yield-prediction.onrender.com |
+| Deployed, publicly accessible app | Achieved — live at nyagatare-yield-api.onrender.com |
 
 ### Model performance discussion
 

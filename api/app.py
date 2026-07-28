@@ -183,7 +183,7 @@ def predict():
 
     prediction = float(model.predict(X)[0])
     rmse       = meta['cv_rmse']
-    confidence = compute_confidence(crop, data, meta['cv_r2'])
+    confidence, level = compute_confidence(crop, data, meta['cv_r2'])
 
     result = {
         'crop':                  crop,
@@ -193,7 +193,8 @@ def predict():
         'model_r2':              meta['cv_r2'],
         'model_rmse':            rmse,
         'prediction_confidence': confidence,
-        'advice':                generate_advice(crop, data, prediction, confidence),
+        'confidence_level':      level,
+        'advice':                generate_advice(crop, data, prediction, level),
         'inputs_received':       data,
     }
 

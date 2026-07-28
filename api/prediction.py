@@ -55,11 +55,11 @@ def build_feature_row(crop, data, model_meta):
     return pd.DataFrame([{k: row[k] for k in features if k in row}])
 
 
-def compute_confidence(crop, data, r2):
-    """Adjust model R² up or down based on how typical the farmer's inputs are.
-
-    Inputs within the agronomic ranges seen during training raise confidence;
-    values outside those ranges represent extrapolation, so confidence drops.
+def typicality_score(crop, data):
+    """Score in [-4, 4] measuring how typical the farmer's inputs are compared
+    to the agronomic ranges seen during training. Deliberately independent of
+    the model's own R², so it stays comparable across crops with different
+    baseline accuracy.
     """
     rng   = ADVICE_RANGES[crop]
     score = 0
@@ -79,10 +79,34 @@ def compute_confidence(crop, data, r2):
     fert_count = sum(int(data.get(f'has_{n}', 0)) for n in ('N', 'P', 'K'))
     score += (fert_count - 1.5) / 1.5
 
-    return round(max(0.0, min(1.0, r2 + (score / 4) * 0.2)), 3)
+    return score
 
 
-def generate_advice(crop, data, prediction, confidence):
+def confidence_level(score):
+    """High/medium/low label driven purely by input typicality (the score),
+    not by the crop's baseline R² — a model whose R² already sits above any
+    fixed cutoff would otherwise show 'High' almost regardless of input
+    typicality, and one below it could never show 'High' at all.
+    """
+    if score >= 2:
+        return 'high'
+    if score <= -2:
+        return 'low'
+    return 'medium'
+
+
+def compute_confidence(crop, data, r2):
+    """Return (numeric confidence, level). The numeric value adjusts model R²
+    up or down based on how typical the farmer's inputs are, for display as a
+    rough probability-like figure. The level is computed separately from the
+    typicality score alone — see confidence_level().
+    """
+    score = typicality_score(crop, data)
+    value = round(max(0.0, min(1.0, r2 + (score / 4) * 0.2)), 3)
+    return value, confidence_level(score)
+
+
+def generate_advice(crop, data, prediction, level):
     """Return a list of {code, params} tips describing how the farmer's inputs
     compare to agronomic norms. Codes map to translated message templates on
     the frontend (see LangContext tip_* keys).
@@ -126,7 +150,7 @@ def generate_advice(crop, data, prediction, confidence):
     elif prediction < avg * 0.85:
         tips.append({'code': 'yield_below_avg', 'params': {}})
 
-    if confidence < 0.65:
+    if level != 'high':
         tips.append({'code': 'confidence_low', 'params': {}})
 
     return tips

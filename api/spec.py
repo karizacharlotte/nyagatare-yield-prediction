@@ -119,6 +119,7 @@ OPENAPI_SPEC = {
                             'model_r2': 0.494,
                             'model_rmse': 0.316,
                             'prediction_confidence': 0.694,
+                            'confidence_level': 'high',
                             'advice': [
                                 {'code': 'fertiliser_full', 'params': {}},
                                 {'code': 'yield_above_avg', 'params': {}},
